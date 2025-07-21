@@ -1,6 +1,6 @@
 #include "HAL/HAL.h"
-#include "App/Utils/ButtonEvent/ButtonEvent.h"
-#include "App/Accounts/Account_Master.h"
+#include "Encoder/ButtonEvent.h"
+// #include "App/Accounts/Account_Master.h"
 
 static ButtonEvent EncoderPush(5000);
 
@@ -8,7 +8,7 @@ static bool EncoderEnable = true;
 static volatile int16_t EncoderDiff = 0;
 static bool EncoderDiffDisable = false;
 
-Account* actEncoder;
+// Account *actEncoder;
 
 static void Encoder_IrqHandler()
 {
@@ -44,17 +44,19 @@ static void Encoder_IrqHandler()
     }
 }
 
-static void Encoder_PushHandler(ButtonEvent* btn, int event)
+static void Encoder_PushHandler(ButtonEvent *btn, int event)
 {
     if (event == ButtonEvent::EVENT_PRESSED)
     {
         HAL::Buzz_Tone(500, 20);
         EncoderDiffDisable = true;
-    } else if (event == ButtonEvent::EVENT_RELEASED)
+    }
+    else if (event == ButtonEvent::EVENT_RELEASED)
     {
         HAL::Buzz_Tone(700, 20);
         EncoderDiffDisable = false;
-    } else if (event == ButtonEvent::EVENT_LONG_PRESSED)
+    }
+    else if (event == ButtonEvent::EVENT_LONG_PRESSED)
     {
         HAL::Audio_PlayMusic("Shutdown");
         HAL::Power_Shutdown();
@@ -65,8 +67,8 @@ static void Encoder_RotateHandler(int16_t diff)
 {
     HAL::Buzz_Tone(300, 5);
 
-    actEncoder->Commit((const void*) &diff, sizeof(int16_t));
-    actEncoder->Publish();
+    // actEncoder->Commit((const void *)&diff, sizeof(int16_t)); // 获取编码器数据
+    // actEncoder->Publish();                                    // 向订阅者发布数据
 }
 
 void HAL::Encoder_Init()
@@ -79,9 +81,7 @@ void HAL::Encoder_Init()
 
     EncoderPush.EventAttach(Encoder_PushHandler);
 
-
-    actEncoder = new Account("Encoder", AccountSystem::Broker(), sizeof(int16_t), nullptr);
-
+    // actEncoder = new Account("Encoder", AccountSystem::Broker(), sizeof(int16_t), nullptr);
 }
 
 void HAL::Encoder_Update()

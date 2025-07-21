@@ -1,6 +1,6 @@
 /*
- * @Descripttion: 
- * @version: 
+ * @Descripttion:
+ * @version:
  * @Author: congsir
  * @Date: 2022-05-15 17:02:59
  * @LastEditors: wenzheng 565402462@qq.com
@@ -9,19 +9,26 @@
 #pragma once
 
 #include <Arduino.h>
+#include "HAL/HAL.h"
+#include "ws2812_driver.h"
 
 #define ENABLE_BLE_KEY_BOARD
 #define ENABLE_WS2812_LED
-//#define ESP32C3_ENABLE
+// #define ESP32C3_ENABLE
 
+#define LVGL_RUNNING_CORE 0  // 内核选择   LVGL用核心0  其他用核心1
+#define ESP32_RUNNING_CORE 1 // 内核选择   LVGL用核心0  其他用核心1
+#define ESP32_TOUCH_PIN1 33  //
+#define ESP32_TOUCH_PIN2 32  //
+#define ESP32_TOUCH_PIN3 12  //
 
-#define LVGL_RUNNING_CORE   0            //内核选择   LVGL用核心0  其他用核心1
-#define ESP32_RUNNING_CORE  1            //内核选择   LVGL用核心0  其他用核心1
-#define ESP32_TOUCH_PIN1    33           //
-#define ESP32_TOUCH_PIN2    32           //
-#define ESP32_TOUCH_PIN3    12           //
-#define WS2812_PIN          11           //定义选择引脚
-#define WS2812_NUM          4            //定义led个数，决定数组长度
+#define WS2812_PIN_1 5  // RGB1引脚
+#define WS2812_PIN_2 18 // RGB2引脚
+#define WS2812_PIN_3 19 // RGB3引脚
+
+#define WS2812_NUM_1 4 // 定义led个数，决定数组长度
+#define WS2812_NUM_2 4 // 定义led个数，决定数组长度
+#define WS2812_NUM_3 4 // 定义led个数，决定数组长度
 
 struct _knob_message
 {
@@ -49,4 +56,3 @@ struct _iot_control_message
 // extern QueueHandle_t motor_rcv_Queue;  //motor 接收消息队列
 // extern QueueHandle_t ws2812_rcv_Queue;  //ws2812 接收消息队列
 // extern QueueHandle_t iot_control_Queue;  //ws2812 接收消息队列
-

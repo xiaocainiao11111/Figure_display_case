@@ -12,7 +12,9 @@
 #include <Adafruit_NeoPixel.h>
 #endif
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(WS2812_NUM, WS2812_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(WS2812_NUM_1, WS2812_PIN_1, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(WS2812_NUM_1, WS2812_PIN_2, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(WS2812_NUM_1, WS2812_PIN_3, NEO_GRB + NEO_KHZ800);
 
 SemaphoreHandle_t ws2812_timeout_Semaphore;
 TimerHandle_t ws2812_delay_timer;
@@ -20,121 +22,121 @@ TaskHandle_t Task_rainbowCycle_Handle; //ws2812 呼吸灯 任务
 
 void WS2812_init(void)
 {
-    strip.begin();
-    strip.setBrightness(100);
-    strip.show(); 
+    strip1.begin();
+    strip1.setBrightness(100);
+    strip1.show(); 
 }
 
-// void ws_delay_timeout(TimerHandle_t pxTimer)
-// {
-//     int32_t lArrayIndex;
-//     configASSERT(pxTimer);
-//     static BaseType_t xHigherPriorityTaskWoken;
-//     // 读取超时定时器的ID
-//     // lArrayIndex = (int32_t)pvTimerGetTimerID(pxTimer);
-//     // Serial.print("[E]ws_delay_timeout----");
-//     // Serial.println(lArrayIndex);
-//     xSemaphoreGiveFromISR( ws2812_timeout_Semaphore, &xHigherPriorityTaskWoken);
+void ws_delay_timeout(TimerHandle_t pxTimer)
+{
+    int32_t lArrayIndex;
+    configASSERT(pxTimer);
+    static BaseType_t xHigherPriorityTaskWoken;
+    // 读取超时定时器的ID
+    // lArrayIndex = (int32_t)pvTimerGetTimerID(pxTimer);
+    // Serial.print("[E]ws_delay_timeout----");
+    // Serial.println(lArrayIndex);
+    xSemaphoreGiveFromISR( ws2812_timeout_Semaphore, &xHigherPriorityTaskWoken);
 
-//     //xTimerStop(pxTimer, 0);
-// }
+    //xTimerStop(pxTimer, 0);
+}
 
-// void ws2812_smart_delay(uint32_t time_t)
-// {
-//     if(xTimerIsTimerActive(ws2812_delay_timer))
-//     {
-//         xTimerStop(ws2812_delay_timer, 0);//首先停止当前的定时器
-//         xTimerChangePeriod(ws2812_delay_timer, time_t, 0);//修改定时器周期
-//         xTimerReset(ws2812_delay_timer, 0);
-//     }else{
-//         xTimerChangePeriod(ws2812_delay_timer, time_t, 0);
-//         xTimerStart(ws2812_delay_timer, 0);
-//     }
+void ws2812_smart_delay(uint32_t time_t)
+{
+    if(xTimerIsTimerActive(ws2812_delay_timer))
+    {
+        xTimerStop(ws2812_delay_timer, 0);//首先停止当前的定时器
+        xTimerChangePeriod(ws2812_delay_timer, time_t, 0);//修改定时器周期
+        xTimerReset(ws2812_delay_timer, 0);
+    }else{
+        xTimerChangePeriod(ws2812_delay_timer, time_t, 0);
+        xTimerStart(ws2812_delay_timer, 0);
+    }
 
 
-//     //阻塞等待超时信号量
-//     xSemaphoreTake(ws2812_timeout_Semaphore, portMAX_DELAY);
-// }
+    //阻塞等待超时信号量
+    xSemaphoreTake(ws2812_timeout_Semaphore, portMAX_DELAY);
+}
 
-// void ws2812_colorWipe(uint32_t c, uint8_t wait)
-// {
-//     for (uint16_t i = 0; i < strip.numPixels(); i++)
-//     {
-//         strip.setPixelColor(i, c);
-//         strip.show();
-//         delay(wait);
-//     }
-// }
+void ws2812_colorWipe(uint32_t c, uint8_t wait)
+{
+    for (uint16_t i = 0; i < strip1.numPixels(); i++)
+    {
+        strip1.setPixelColor(i, c);
+        strip1.show();
+        delay(wait);
+    }
+}
 
-// uint32_t ws2812_wheel(byte WheelPos)
-// {
-//     WheelPos = 255 - WheelPos;
-//     if (WheelPos < 85)
-//     {
-//         return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-//     }
-//     if (WheelPos < 170)
-//     {
-//         WheelPos -= 85;
-//         return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-//     }
-//     WheelPos -= 170;
-//     return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-// }
-// //整体渐变
-// void ws2812_rainbow(uint8_t wait)
-// {
-//     uint16_t i, j;
+uint32_t ws2812_wheel(byte WheelPos)
+{
+    WheelPos = 255 - WheelPos;
+    if (WheelPos < 85)
+    {
+        return strip1.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+    }
+    if (WheelPos < 170)
+    {
+        WheelPos -= 85;
+        return strip1.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+    }
+    WheelPos -= 170;
+    return strip1.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+//整体渐变
+void ws2812_rainbow(uint8_t wait)
+{
+    uint16_t i, j;
 
-//     for (j = 0; j < 256; j++)
-//     {
-//         for (i = 0; i < strip.numPixels(); i++)
-//         {
-//             strip.setPixelColor(i, ws2812_wheel((i + j) & 255));
-//         }
-//         strip.show();
-//         delay(wait);
-//     }
-// }
+    for (j = 0; j < 256; j++)
+    {
+        for (i = 0; i < strip1.numPixels(); i++)
+        {
+            strip1.setPixelColor(i, ws2812_wheel((i + j) & 255));
+        }
+        strip1.show();
+        delay(wait);
+    }
+}
 
-// // 呼吸灯效果(rainbow进阶版本)
-// void rainbowCycle(uint8_t wait)
-// {
-//     uint16_t i, j;
+// 呼吸灯效果(rainbow进阶版本)
+void rainbowCycle(uint8_t wait)
+{
+    uint16_t i, j;
 
-//     for (j = 0; j < 256 * 5; j++)
-//     { // 5 cycles of all colors on wheel
-//         for (i = 0; i < strip.numPixels(); i++)
-//         {
-//             strip.setPixelColor(i, ws2812_wheel(((i * 256 / strip.numPixels()) + j) & 255));
-//         }
-//         strip.show();
-//         delay(wait);
-//     }
-// }
+    for (j = 0; j < 256 * 5; j++)
+    { // 5 cycles of all colors on wheel
+        for (i = 0; i < strip1.numPixels(); i++)
+        {
+            strip1.setPixelColor(i, ws2812_wheel(((i * 256 / strip1.numPixels()) + j) & 255));
+        }
+        strip1.show();
+        delay(wait);
+    }
+}
 
-// // Theatre-style crawling lights.
-// void theaterChase(uint32_t c, uint8_t wait)
-// {
-//     for (int j = 0; j < 10; j++)
-//     { // do 10 cycles of chasing
-//         for (int q = 0; q < 3; q++)
-//         {
-//             for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
-//             {
-//                 strip.setPixelColor(i + q, c); // turn every third pixel on
-//             }
-//             strip.show();
+// Theatre-style crawling lights.
+void theaterChase(uint32_t c, uint8_t wait)
+{
+    for (int j = 0; j < 10; j++)
+    { // do 10 cycles of chasing
+        for (int q = 0; q < 3; q++)
+        {
+            for (uint16_t i = 0; i < strip1.numPixels(); i = i + 3)
+            {
+                strip1.setPixelColor(i + q, c); // turn every third pixel on
+            }
+            strip1.show();
 
-//             delay(wait);
+            delay(wait);
 
-//             for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
-//             {
-//                 strip.setPixelColor(i + q, 0); // turn every third pixel off
-//             }
-//         }
-//     }
-// }
+            for (uint16_t i = 0; i < strip1.numPixels(); i = i + 3)
+            {
+                strip1.setPixelColor(i + q, 0); // turn every third pixel off
+            }
+        }
+    }
+}
 
 // // Theatre-style crawling lights with rainbow effect
 // void theaterChaseRainbow(uint8_t wait)
@@ -143,17 +145,17 @@ void WS2812_init(void)
 //     { // cycle all 256 colors in the wheel
 //         for (int q = 0; q < 3; q++)
 //         {
-//             for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
+//             for (uint16_t i = 0; i < strip1.numPixels(); i = i + 3)
 //             {
-//                 strip.setPixelColor(i + q, ws2812_wheel((i + j) % 255)); // turn every third pixel on
+//                 strip1.setPixelColor(i + q, ws2812_wheel((i + j) % 255)); // turn every third pixel on
 //             }
-//             strip.show();
+//             strip1.show();
 
 //             delay(wait);
 
-//             for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
+//             for (uint16_t i = 0; i < strip1.numPixels(); i = i + 3)
 //             {
-//                 strip.setPixelColor(i + q, 0); // turn every third pixel off
+//                 strip1.setPixelColor(i + q, 0); // turn every third pixel off
 //             }
 //         }
 //     }
@@ -161,9 +163,9 @@ void WS2812_init(void)
 
 // void ws2812_clear()
 // {
-//     for (uint16_t i = 0; i < strip.numPixels(); i++)
+//     for (uint16_t i = 0; i < strip1.numPixels(); i++)
 //     {
-//         strip.setPixelColor(i, 0);
+//         strip1.setPixelColor(i, 0);
 //         delay(10);
 //     }
 // }
@@ -178,11 +180,11 @@ void WS2812_init(void)
 //     if (blue > max_color)
 //         max_color = blue;
 //     uint8_t instance = (max_color - 200) / num;
-//     for (uint16_t i = 0; i < strip.numPixels() + num; i++)
+//     for (uint16_t i = 0; i < strip1.numPixels() + num; i++)
 //     {
 //         for (uint8_t j = 0; j < num; j++)
 //         {
-//             if (i - j >= 0 && i - j < strip.numPixels())
+//             if (i - j >= 0 && i - j < strip1.numPixels())
 //             {
 //                 int red_after = red - (instance * j);
 //                 int green_after = green - (instance * j);
@@ -194,13 +196,13 @@ void WS2812_init(void)
 //                     green_after -= 200;
 //                     blue_after -= 200;
 //                 }
-//                 strip.setPixelColor(i - j, strip.Color(red_after >= 0 ? red_after : 0, green_after >= 0 ? green_after : 0, blue_after >= 0 ? blue_after : 0));
+//                 strip1.setPixelColor(i - j, strip1.Color(red_after >= 0 ? red_after : 0, green_after >= 0 ? green_after : 0, blue_after >= 0 ? blue_after : 0));
 //             }
 //         }
-//         if (i - num >= 0 && i - num < strip.numPixels())
-//             strip.setPixelColor(i - num, 0);
+//         if (i - num >= 0 && i - num < strip1.numPixels())
+//             strip1.setPixelColor(i - num, 0);
 
-//         strip.show();
+//         strip1.show();
 //         delay(wait);
 //     }
 //     ws2812_clear();
@@ -216,11 +218,11 @@ void WS2812_init(void)
 //     if (blue > max_color)
 //         max_color = blue;
 //     uint8_t instance = (max_color - 200) / num;
-//     for (int i = strip.numPixels() - 1; i >= -num; i--)
+//     for (int i = strip1.numPixels() - 1; i >= -num; i--)
 //     {
 //         for (uint8_t j = 0; j < num; j++)
 //         {
-//             if (i + j >= 0 && i + j < strip.numPixels())
+//             if (i + j >= 0 && i + j < strip1.numPixels())
 //             {
 //                 int red_after = red - instance * j;
 //                 int green_after = green - instance * j;
@@ -231,13 +233,13 @@ void WS2812_init(void)
 //                     green_after -= 200;
 //                     blue_after -= 200;
 //                 }
-//                 strip.setPixelColor(i + j, strip.Color(red_after >= 0 ? red_after : 0, green_after >= 0 ? green_after : 0, blue_after >= 0 ? blue_after : 0));
+//                 strip1.setPixelColor(i + j, strip1.Color(red_after >= 0 ? red_after : 0, green_after >= 0 ? green_after : 0, blue_after >= 0 ? blue_after : 0));
 //             }
 //         }
-//         if (i + num >= 0 && i + num < strip.numPixels())
-//             strip.setPixelColor(i + num, 0);
+//         if (i + num >= 0 && i + num < strip1.numPixels())
+//             strip1.setPixelColor(i + num, 0);
 
-//         strip.show();
+//         strip1.show();
 //         delay(wait);
 //     }
 // }
@@ -298,9 +300,9 @@ void WS2812_init(void)
 //             break;
 //         case WS2812_METEOR_OVERTURN:
 //             vTaskSuspend(Task_rainbowCycle_Handle);
-//             ws2812_colorWipe(strip.Color(255, 0, 0), 20); // Red
-//             ws2812_colorWipe(strip.Color(0, 255, 0), 20); // Green
-//             ws2812_colorWipe(strip.Color(0, 0, 255), 20); // Blue
+//             ws2812_colorWipe(strip1.Color(255, 0, 0), 20); // Red
+//             ws2812_colorWipe(strip1.Color(0, 255, 0), 20); // Green
+//             ws2812_colorWipe(strip1.Color(0, 0, 255), 20); // Blue
 //             vTaskResume(Task_rainbowCycle_Handle);
 //             ws2812_status = WS2812_NORMAL;
 //             break;
@@ -323,15 +325,15 @@ void WS2812_init(void)
 // //{
 //     // 递进渐变
 //     // Some example procedures showing how to display to the pixels:
-//     // colorWipe(strip.Color(255, 0, 0), 20); // Red
-//     // colorWipe(strip.Color(0, 255, 0), 20); // Green
-//     // colorWipe(strip.Color(0, 0, 255), 20); // Blue
+//     // colorWipe(strip1.Color(255, 0, 0), 20); // Red
+//     // colorWipe(strip1.Color(0, 255, 0), 20); // Green
+//     // colorWipe(strip1.Color(0, 0, 255), 20); // Blue
 
 //     // 交叉突变
 //     // Send a theater pixel chase in...
-//     // theaterChase(strip.Color(127, 127, 127), 50); // White
-//     // theaterChase(strip.Color(127, 0, 0), 50); // Red
-//     // theaterChase(strip.Color(0, 0, 127), 50); // Blue
+//     // theaterChase(strip1.Color(127, 127, 127), 50); // White
+//     // theaterChase(strip1.Color(127, 0, 0), 50); // Red
+//     // theaterChase(strip1.Color(0, 0, 127), 50); // Blue
 
 //     // 整体渐变
 //     //rainbow(12);
