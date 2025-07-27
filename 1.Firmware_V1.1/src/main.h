@@ -10,7 +10,8 @@
 
 #include <Arduino.h>
 #include "HAL/HAL.h"
-#include "ws2812_driver.h"
+#include "RGB.h"
+#include "TB6612.h"
 
 #define ENABLE_BLE_KEY_BOARD
 #define ENABLE_WS2812_LED
@@ -22,9 +23,13 @@
 #define ESP32_TOUCH_PIN2 32  //
 #define ESP32_TOUCH_PIN3 12  //
 
-#define WS2812_PIN_1 5  // RGB1引脚
-#define WS2812_PIN_2 18 // RGB2引脚
-#define WS2812_PIN_3 19 // RGB3引脚
+// #define RGB_PIN_1 5  // RGB1引脚
+#define RGB_PIN_2 18 // RGB2引脚
+#define RGB_PIN_3 19 // RGB3引脚
+
+#define RGB_1_NUM 10 // RGB数量
+#define RGB_2_NUM 10
+#define RGB_3_NUM 10
 
 #define MOTOR_PWM 17
 #define MOTOR_PIN_1 16
