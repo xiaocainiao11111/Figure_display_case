@@ -18,6 +18,24 @@ WouoUI
 换屏幕
 
 
+
+
+u8g2.drawRBox（绘制填充的圆角矩形）
+
+x, y: 矩形左上角的坐标
+   w, h: 矩形的宽度和高度
+   r: 圆角的半径
+
+drawRBox是填充的实心矩形，drawRFrame是空心的矩形框
+
+std::ceil(x)
+返回一个浮点值，表示不小于`x`的最小整数
+
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+将一个数从一个范围线性映射到另一个范围
+
+u8g2的缓存及瓦片机制
+
 参考工程：
 https://gitee.com/wenzhengclub/super_knob
 

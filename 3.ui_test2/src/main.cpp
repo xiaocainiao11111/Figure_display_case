@@ -23,7 +23,17 @@
 void chart_draw_frame();
 
 // U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/22, /* data=*/21); // ESP32 Thing, pure SW emulated I2C
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, 22, 21);
+// U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, 22, 21);
+
+// 使用硬件SPI（VSPI默认引脚：SCLK=18, MOSI=23）
+U8G2_SH1107_SEEED_128X128_F_4W_HW_SPI u8g2(
+    U8G2_R0,
+    /* CS=*/12,  // 自定义CS引脚
+    /* DC=*/14,  // 自定义DC引脚
+    /* RESET=*/2 // 自定义RESET引脚
+);
+
+
 PROGMEM const uint8_t icon_pic[][200]{
     {
         0x00, 0x00, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x3E,
