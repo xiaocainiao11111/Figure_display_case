@@ -36,6 +36,14 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
 
 u8g2的缓存及瓦片机制
 
+
+ui源码解析：
+在proc里处理按键判断
+
+
+
+
+
 参考工程：
 https://gitee.com/wenzhengclub/super_knob
 
