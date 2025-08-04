@@ -39,10 +39,10 @@ int B;
 void colorWipe(uint32_t color, int wait)
 {
     for (int i = 0; i < RGB3.numPixels(); i++)
-    {                                  // For each pixel in RGB3...
+    {                                 // For each pixel in RGB3...
         RGB3.setPixelColor(i, color); //  Set pixel's color (in RAM)
         RGB3.show();                  //  Update RGB3 to match
-        delay(wait);                   //  Pause for a moment
+        delay(wait);                  //  Pause for a moment
     }
 }
 
@@ -54,7 +54,7 @@ void theaterChase(uint32_t color, int wait)
     for (int a = 0; a < 10; a++)
     { // Repeat 10 times...
         for (int b = 0; b < 3; b++)
-        {                  //  'b' counts from 0 to 2...
+        {                 //  'b' counts from 0 to 2...
             RGB3.clear(); //   Set all pixels in RAM to 0 (off)
             // 'c' counts up from 'b' to end of RGB3 in steps of 3...
             for (int c = b; c < RGB3.numPixels(); c += 3)
@@ -62,7 +62,7 @@ void theaterChase(uint32_t color, int wait)
                 RGB3.setPixelColor(c, color); // Set pixel 'c' to value 'color'
             }
             RGB3.show(); // Update RGB3 with new contents
-            delay(wait);  // Pause for a moment
+            delay(wait); // Pause for a moment
         }
     }
 }
@@ -76,7 +76,7 @@ void rainbow(int wait)
         // Above line is equivalent to:
         // RGB3.rainbow(firstPixelHue, 1, 255, 255, true);
         RGB3.show(); // Update RGB3 with new contents
-        delay(wait);  // Pause for a moment
+        delay(wait); // Pause for a moment
     }
 }
 
@@ -89,7 +89,7 @@ void theaterChaseRainbow(int wait)
         for (int a = 0; a < 30; a++)
         { // Repeat 30 times...
             for (int b = 0; b < 3; b++)
-            {                  //  'b' counts from 0 to 2...
+            {                 //  'b' counts from 0 to 2...
                 RGB3.clear(); //   Set all pixels in RAM to 0 (off)
                 // 'c' counts up from 'b' to end of RGB3 in increments of 3...
                 for (int c = b; c < RGB3.numPixels(); c += 3)
@@ -99,7 +99,7 @@ void theaterChaseRainbow(int wait)
                     // of the RGB3 (RGB3.numPixels() steps):
                     int hue = firstPixelHue + c * 65536L / RGB3.numPixels();
                     uint32_t color = RGB3.gamma32(RGB3.ColorHSV(hue)); // hue -> RGB
-                    RGB3.setPixelColor(c, color);                       // Set pixel 'c' to value 'color'
+                    RGB3.setPixelColor(c, color);                      // Set pixel 'c' to value 'color'
                 }
                 RGB3.show(); // Update RGB3 with new contents
                 // delay(wait); // Pause for a moment

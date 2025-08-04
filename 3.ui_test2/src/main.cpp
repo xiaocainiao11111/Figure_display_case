@@ -668,7 +668,7 @@ void pid_edit_ui_show() // 显示PID编辑
     u8g2.drawFrame(18, 36, 60, 8);
     u8g2.drawBox(20, 38, (uint8_t)(Kpid[pid_select] / PID_MAX * 56), 4);
 
-    u8g2.setCursor(22, 30);
+    u8g2.setCursor(22, 30); // 设置光标起点
     switch (pid_select)
     {
     case 0:

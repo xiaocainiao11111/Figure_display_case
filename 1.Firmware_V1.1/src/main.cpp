@@ -1,5 +1,3 @@
-// #include <Arduino.h>
-#include <Adafruit_NeoPixel.h>
 #include <main.h>
 
 // #define POWER_CLOCK 26
