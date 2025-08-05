@@ -33,7 +33,6 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, 22, 21);
 //     /* RESET=*/2 // 自定义RESET引脚
 // );
 
-
 PROGMEM const uint8_t icon_pic[][200]{
     {
         0x00, 0x00, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x3E,
@@ -230,8 +229,8 @@ uint16_t buf_len;
 
 // 选择界面变量
 uint8_t x;
-int16_t y, y_trg;                 // 目标和当前
-uint8_t line_y, line_y_trg;       // 线的位置
+int16_t y, y_trg;                 // 文本的位置，当前和目标
+uint8_t line_y, line_y_trg;       // 右边滑块线的位置
 uint8_t box_width, box_width_trg; // 框的宽度
 int16_t box_y, box_y_trg;         // 框的当前值和目标值
 int8_t ui_select;                 // 当前选中那一栏
@@ -335,7 +334,7 @@ KEY key[3] = {false};
 // 按键信息
 typedef struct
 {
-    uint8_t id;
+    uint8_t id; // 0：前一个，1：后一个,2：确认
     bool pressed;
 } KEY_MSG;
 
@@ -387,6 +386,7 @@ void key_scan()
 // 移动函数
 bool move(int16_t *a, int16_t *a_trg)
 {
+    Serial.println("move");
     if (*a < *a_trg)
     {
         *a += SPEED;
@@ -409,6 +409,8 @@ bool move(int16_t *a, int16_t *a_trg)
 // 移动函数
 bool move_icon(int16_t *a, int16_t *a_trg)
 {
+    Serial.println("move_icon");
+
     if (*a < *a_trg)
     {
         *a += ICON_SPEED;
@@ -431,6 +433,8 @@ bool move_icon(int16_t *a, int16_t *a_trg)
 // 宽度移动函数
 bool move_width(uint8_t *a, uint8_t *a_trg, uint8_t select, uint8_t id)
 {
+    Serial.println("move_width");
+
     if (*a < *a_trg)
     {
         uint8_t step = 16 / SPEED; // 判断步数
@@ -475,6 +479,8 @@ bool move_width(uint8_t *a, uint8_t *a_trg, uint8_t select, uint8_t id)
 // 进度条移动函数
 bool move_bar(uint8_t *a, uint8_t *a_trg)
 {
+    Serial.println("move_bar");
+
     if (*a < *a_trg)
     {
         uint8_t step = 16 / SPEED;                                                                                                // 判断步数
@@ -501,6 +507,7 @@ bool move_bar(uint8_t *a, uint8_t *a_trg)
 // 文字编辑函数
 void text_edit(bool dir, uint8_t index)
 {
+    Serial.println("text_edit");
     if (!dir)
     {
         if (name[index] >= 'A' && name[index] <= 'Z') // 大写字母
@@ -564,6 +571,8 @@ void text_edit(bool dir, uint8_t index)
 // 消失函数
 void disappear()
 {
+    Serial.println("disappear");
+
     switch (disappear_step)
     {
     case 1:
@@ -606,6 +615,8 @@ void disappear()
 
 void logo_ui_show() // 显示logo
 {
+    Serial.println("logo_ui_show");
+
     u8g2.drawXBMP(0, 0, 128, 64, LOGO);
 
     // for(uint16_t i=0;i<buf_len;++i)
@@ -621,8 +632,10 @@ void logo_ui_show() // 显示logo
     // }
 }
 
-void select_ui_show() // 选择界面
+void select_ui_show() // 选择界面，包括右边滑块和左边选择框
 {
+    Serial.println("select_ui_show");
+
     move_bar(&line_y, &line_y_trg);
     move(&y, &y_trg);
     move(&box_y, &box_y_trg);
@@ -643,10 +656,13 @@ void select_ui_show() // 选择界面
     u8g2.setDrawColor(2);
     u8g2.drawRBox(0, box_y, box_width, 16, 1);
     u8g2.setDrawColor(1);
+    Serial.printf("line_y:%d  line_y_trg:%d  box_y:%d  box_y_trg:%d  y:%d  y_trg:%d  \n", line_y, line_y_trg, box_y, box_y_trg, y, y_trg);
 }
 
 void pid_ui_show() // PID界面
 {
+    Serial.println("pid_ui_show");
+
     move_bar(&pid_line_y, &pid_line_y_trg);
     move(&pid_box_y, &pid_box_y_trg);
     move_width(&pid_box_width, &pid_box_width_trg, pid_select, key_msg.id);
@@ -669,6 +685,8 @@ void pid_ui_show() // PID界面
 
 void pid_edit_ui_show() // 显示PID编辑
 {
+    Serial.println("pid_edit_ui_show");
+
     u8g2.drawBox(16, 16, 96, 31);
     u8g2.setDrawColor(2);
     u8g2.drawBox(17, 17, 94, 29);
@@ -678,7 +696,7 @@ void pid_edit_ui_show() // 显示PID编辑
     u8g2.drawFrame(18, 36, 60, 8);
     u8g2.drawBox(20, 38, (uint8_t)(Kpid[pid_select] / PID_MAX * 56), 4);
 
-    u8g2.setCursor(22, 30); // 设置光标起点
+    u8g2.setCursor(22, 30);
     switch (pid_select)
     {
     case 0:
@@ -700,6 +718,7 @@ void pid_edit_ui_show() // 显示PID编辑
 
 void icon_ui_show(void) // 显示icon
 {
+    Serial.println("icon_ui_show");
 
     move_icon(&icon_x, &icon_x_trg);
     move(&app_y, &app_y_trg);
@@ -715,6 +734,8 @@ void icon_ui_show(void) // 显示icon
 
 void chart_ui_show() // chart界面
 {
+    Serial.println("chart_ui_show");
+
     if (!frame_is_drawed) // 框架只画一遍
     {
         u8g2.clearBuffer();
@@ -752,6 +773,7 @@ void chart_ui_show() // chart界面
 
 void chart_draw_frame() // chart界面
 {
+    Serial.println("chart_draw_frame");
 
     u8g2.drawStr(4, 12, "Real time angle :");
     u8g2.drawRBox(4, 18, 120, 46, 8);
@@ -771,6 +793,8 @@ void chart_draw_frame() // chart界面
 
 void text_edit_ui_show()
 {
+    Serial.println("text_edit_ui_show");
+
     u8g2.drawRFrame(4, 6, 120, 52, 8);
     u8g2.drawStr((128 - u8g2.getStrWidth("--Text Editor--")) / 2, 20, "--Text Editor--");
     u8g2.drawStr(10, 38, name);
@@ -824,6 +848,7 @@ void text_edit_ui_show()
 
 void about_ui_show() // about界面
 {
+    Serial.println("about_ui_show");
 
     u8g2.drawStr(2, 12, "MCU : ESP32");
     u8g2.drawStr(2, 28, "FLASH : 4MB");
@@ -840,6 +865,8 @@ void about_ui_show() // about界面
 
 void logo_proc() // logo界面处理函数
 {
+    Serial.println("logo_proc");
+
     if (key_msg.pressed)
     {
         key_msg.pressed = false;
@@ -851,6 +878,8 @@ void logo_proc() // logo界面处理函数
 
 void pid_edit_proc(void) // pid编辑界面处理函数
 {
+    Serial.println("pid_edit_proc");
+
     if (key_msg.pressed)
     {
         key_msg.pressed = false;
@@ -881,6 +910,8 @@ void pid_edit_proc(void) // pid编辑界面处理函数
 
 void pid_proc() // pid界面处理函数
 {
+    Serial.println("pid_proc");
+
     pid_ui_show();
     if (key_msg.pressed)
     {
@@ -935,15 +966,17 @@ void pid_proc() // pid界面处理函数
 
 void select_proc(void) // 选择界面处理
 {
+    Serial.println("select_proc");
+
     if (key_msg.pressed)
     {
         key_msg.pressed = false;
         switch (key_msg.id)
         {
         case 0:
-            if (ui_select < 1)
+            if (ui_select < 1) // 处在最小的ui，直接退出
                 break;
-            ui_select -= 1;
+            ui_select -= 1; // 选择前一个
             line_y_trg -= single_line_length;
             if (ui_select < -(y / 16))
             {
@@ -1012,6 +1045,8 @@ void select_proc(void) // 选择界面处理
 
 void icon_proc(void) // icon界面处理
 {
+    Serial.println("icon_proc");
+
     icon_ui_show();
     if (key_msg.pressed)
     {
@@ -1049,6 +1084,8 @@ void icon_proc(void) // icon界面处理
 
 void chart_proc() // chart界面处理函数
 {
+    Serial.println("chart_proc");
+
     chart_ui_show();
     if (key_msg.pressed)
     {
@@ -1062,6 +1099,8 @@ void chart_proc() // chart界面处理函数
 
 void text_edit_proc()
 {
+    Serial.println("text_edit_proc");
+
     text_edit_ui_show();
     if (key_msg.pressed)
     {
@@ -1124,6 +1163,8 @@ void text_edit_proc()
 
 void about_proc() // about界面处理函数
 {
+    Serial.println("about_proc");
+
     if (key_msg.pressed)
     {
         key_msg.pressed = false;
@@ -1136,6 +1177,8 @@ void about_proc() // about界面处理函数
 
 void ui_proc() // 总的UI进程
 {
+    Serial.println("ui_proc");
+
     switch (ui_state)
     {
     case S_NONE:
@@ -1182,7 +1225,7 @@ void ui_proc() // 总的UI进程
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
     // Wire.begin(21,22,400000);
     pinMode(BTN0, INPUT_PULLUP);
     pinMode(BTN1, INPUT_PULLUP);
@@ -1193,8 +1236,9 @@ void setup()
     u8g2.setFont(u8g2_font_wqy12_t_chinese1);
     // u8g2.setContrast(10);
 
-    buf_ptr = u8g2.getBufferPtr(); // 拿到buffer首地址
-    buf_len = 8 * u8g2.getBufferTileHeight() * u8g2.getBufferTileWidth();
+    buf_ptr = u8g2.getBufferPtr();                                        // 拿到buffer首地址
+    buf_len = 8 * u8g2.getBufferTileHeight() * u8g2.getBufferTileWidth(); // 1024
+    // Serial.println(buf_len);
 
     x = 4;
     y = y_trg = 0;
