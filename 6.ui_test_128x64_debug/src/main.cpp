@@ -645,7 +645,7 @@ void select_ui_show() // 选择界面，包括右边滑块和左边选择框
     u8g2.drawPixel(127, 0);
     for (uint8_t i = 0; i < list_num; ++i)
     {
-        u8g2.drawStr(x, 16 * i + y + 12, list[i].select); // 第一段输出位置
+        u8g2.drawStr(x, 16 * i + y + 12, list[i].select); // 第一段输出位置，这里的y起缓出的作用
         u8g2.drawPixel(125, single_line_length * (i + 1));
         u8g2.drawPixel(127, single_line_length * (i + 1));
     }
@@ -681,6 +681,8 @@ void pid_ui_show() // PID界面
     u8g2.setDrawColor(1);
     u8g2.drawVLine(125, pid_line_y, 14);
     u8g2.drawVLine(127, pid_line_y, 14);
+    Serial.printf("pid_line_y:%d  pid_line_y_trg:%d  pid_box_y:%d  pid_box_y_trg:%d  pid_box_width:%d  pid_box_width_trg:%d  pid_select:%d\n",
+                  pid_line_y, pid_line_y_trg, pid_box_y, pid_box_y_trg, pid_box_width, pid_box_width_trg, pid_select);
 }
 
 void pid_edit_ui_show() // 显示PID编辑
@@ -714,6 +716,8 @@ void pid_edit_ui_show() // 显示PID编辑
 
     u8g2.setCursor(81, 44);
     u8g2.print(Kpid[pid_select]);
+    Serial.printf("Kpid[pid_select] / PID_MAX * 56:%d\n",
+                  (uint8_t)(Kpid[pid_select] / PID_MAX * 56));
 }
 
 void icon_ui_show(void) // 显示icon
@@ -725,11 +729,13 @@ void icon_ui_show(void) // 显示icon
 
     for (uint8_t i = 0; i < icon_num; ++i)
     {
-        u8g2.drawXBMP(46 + icon_x + i * ICON_SPACE, 6, 36, icon_width[i], icon_pic[i]);
+        u8g2.drawXBMP(46 + icon_x + i * ICON_SPACE, 6, 36, icon_width[i], icon_pic[i]); // 这里icon_x起缓出作用
         u8g2.setClipWindow(0, 48, 128, 64);
         u8g2.drawStr((128 - u8g2.getStrWidth(icon[i].select)) / 2, 62 - app_y + i * 16, icon[i].select);
         u8g2.setMaxClipWindow();
     }
+    Serial.printf("icon_x:%d  icon_x_trg:%d  app_y:%d  app_y_trg:%d\n",
+                  icon_x, icon_x_trg, app_y, app_y_trg);
 }
 
 void chart_ui_show() // chart界面
@@ -769,6 +775,9 @@ void chart_ui_show() // chart界面
 
     u8g2.setCursor(96, 12);
     u8g2.print(angle);
+
+    // Serial.printf("icon_x:%d  icon_x_trg:%d  app_y:%d  app_y_trg:%d\n",
+    //               icon_x, icon_x_trg, app_y, app_y_trg);
 }
 
 void chart_draw_frame() // chart界面

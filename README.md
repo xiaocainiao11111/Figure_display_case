@@ -5,7 +5,6 @@
 屏幕库：
 WouoUI
 
-
 功能：
 
 注意：烧录要按住拨轮
@@ -16,9 +15,6 @@ WouoUI
 灯条
 小程序
 换屏幕
-
-
-
 
 u8g2.drawRBox（绘制填充的圆角矩形）
 
@@ -42,23 +38,19 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
 
 u8g2的缓存及瓦片机制
 
-
 ui源码解析：
-在proc里处理按键判断
-
-
-
-
+先在proc里处理按键判断，只修改目标值，然后进行动画处理，动画是一直在处理的，其实
 
 参考工程：
-https://gitee.com/wenzhengclub/super_knob
+<https://gitee.com/wenzhengclub/super_knob>
 
-https://github.com/xiaocainiao11111/ESP32_connect_XboxController
+<https://github.com/xiaocainiao11111/ESP32_connect_XboxController>
 
-https://github.com/unlir/XDrive
+<https://github.com/unlir/XDrive>
 
-https://github.com/peng-zhihui/Peak
+<https://github.com/peng-zhihui/Peak>
 
+- select_ui_show变化：
 
 line_y:1  line_y_trg:1  box_y:0  box_y_trg:0  y:0  y_trg:0  
 
@@ -69,3 +61,5 @@ line_y:7  line_y_trg:10  box_y:8  box_y_trg:16  y:0  y_trg:0
 line_y:10  line_y_trg:10  box_y:12  box_y_trg:16  y:0  y_trg:0
 
 line_y:10  line_y_trg:10  box_y:16  box_y_trg:16  y:0  y_trg:0  
+
+
