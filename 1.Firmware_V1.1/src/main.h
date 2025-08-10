@@ -12,6 +12,7 @@
 #include "HAL/HAL.h"
 #include "RGB.h"
 #include "TB6612.h"
+#include "OLED/Oled.h"
 
 #define ENABLE_BLE_KEY_BOARD
 #define ENABLE_WS2812_LED
@@ -19,9 +20,7 @@
 
 #define LVGL_RUNNING_CORE 0  // 内核选择   LVGL用核心0  其他用核心1
 #define ESP32_RUNNING_CORE 1 // 内核选择   LVGL用核心0  其他用核心1
-#define ESP32_TOUCH_PIN1 33  //
-#define ESP32_TOUCH_PIN2 32  //
-#define ESP32_TOUCH_PIN3 12  //
+
 
 // #define RGB_PIN_1 5  // RGB1引脚
 #define RGB_PIN_2 18 // RGB2引脚
@@ -34,6 +33,13 @@
 #define MOTOR_PWM 17
 #define MOTOR_PIN_1 16
 #define MOTOR_PIN_2 4
+
+#define OLED_SCL 22
+#define OLED_SDA 21
+
+#define KEY_A 34
+#define KEY_B 33
+#define KEY_EN 32
 
 #define WS2812_NUM_1 4 // 定义led个数，决定数组长度
 #define WS2812_NUM_2 4 // 定义led个数，决定数组长度

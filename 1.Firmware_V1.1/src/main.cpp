@@ -8,10 +8,12 @@ TaskHandle_t Task_ws2812_Handle; // ws2812 任务
 TaskHandle_t Task_motor_Handle;  // motor 任务
 TaskHandle_t Task_key_Handle;    // 按键任务
 TaskHandle_t Task_update_Handle; // 更新任务
+TaskHandle_t Task_oled_Handle;   // oled任务
 
 QueueHandle_t start_Queue;       // 消息队列
 QueueHandle_t iot_control_Queue; // ws2812接收消息队列
 QueueHandle_t key_Queue;         // 按键接收消息队列
+QueueHandle_t oled_Queue;        // oled消息队列
 
 _ws2812_message WS2812_MSG;
 uint16_t adc = 0;
@@ -27,6 +29,17 @@ void Task_start(void *pvParameters)
         adc = analogRead(CONFIG_BAT_DET_PIN);
         Serial.println(adc);
         vTaskDelay(1000);
+    }
+}
+
+void Task_oled(void *pvParameters)
+{
+    Oled_init();
+    while (1)
+    {
+        key_scan();
+        // ui_proc();
+        vTaskDelay(10);
     }
 }
 
@@ -83,6 +96,8 @@ void setup()
         Task_motor, "Task_motor", 1024, NULL, 4, &Task_motor_Handle, ESP32_RUNNING_CORE);
     xTaskCreatePinnedToCore(
         Task_update, "Task_update", 1024, NULL, 4, &Task_update_Handle, ESP32_RUNNING_CORE);
+    xTaskCreatePinnedToCore(
+        Task_oled, "Task_oled", 4096, NULL, 4, &Task_oled_Handle, ESP32_RUNNING_CORE);
 }
 
 void loop()

@@ -1,9 +1,10 @@
 # figure_display_case
-
+![alt text](image.png)
 开发环境：
 
 屏幕库：
 WouoUI
+注意u8g2库连接屏幕失败的话会堵塞
 
 功能：
 
