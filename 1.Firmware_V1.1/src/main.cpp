@@ -32,13 +32,23 @@ void Task_start(void *pvParameters)
     }
 }
 
+void Task_key(void *pvParameters)
+{
+    ENCODER::Encoder_Init();
+    while (1)
+    {
+        ENCODER::Encoder_Update();
+        vTaskDelay(10);
+    }
+}
+
 void Task_oled(void *pvParameters)
 {
     Oled_init();
     while (1)
     {
         key_scan();
-        // ui_proc();
+        ui_proc();
         vTaskDelay(10);
     }
 }
@@ -93,6 +103,8 @@ void setup()
     xTaskCreatePinnedToCore(
         Task_ws2812, "Task_ws2812", 1024, NULL, 4, &Task_ws2812_Handle, ESP32_RUNNING_CORE);
     xTaskCreatePinnedToCore(
+        Task_key, "Task_key", 1024, NULL, 4, &Task_key_Handle, ESP32_RUNNING_CORE);
+    xTaskCreatePinnedToCore(
         Task_motor, "Task_motor", 1024, NULL, 4, &Task_motor_Handle, ESP32_RUNNING_CORE);
     xTaskCreatePinnedToCore(
         Task_update, "Task_update", 1024, NULL, 4, &Task_update_Handle, ESP32_RUNNING_CORE);
@@ -102,6 +114,5 @@ void setup()
 
 void loop()
 {
-    HAL::Update();
     delay(20);
 }

@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include "HAL/HAL.h"
+#include "Encoder/HAL_Encoder.h"
 #include "RGB.h"
 #include "TB6612.h"
 #include "OLED/Oled.h"
@@ -20,7 +21,6 @@
 
 #define LVGL_RUNNING_CORE 0  // 内核选择   LVGL用核心0  其他用核心1
 #define ESP32_RUNNING_CORE 1 // 内核选择   LVGL用核心0  其他用核心1
-
 
 // #define RGB_PIN_1 5  // RGB1引脚
 #define RGB_PIN_2 18 // RGB2引脚
@@ -37,6 +37,7 @@
 #define OLED_SCL 22
 #define OLED_SDA 21
 
+// 按键引脚
 #define KEY_A 34
 #define KEY_B 33
 #define KEY_EN 32

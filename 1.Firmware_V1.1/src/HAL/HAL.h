@@ -50,10 +50,6 @@ namespace HAL
     typedef void(* Power_CallbackFunction_t)(void);
     void Power_SetEventCallback(Power_CallbackFunction_t callback);
 
-/* Buzzer */
-    void Buzz_init();
-    void Buzz_SetEnable(bool en);
-    void Buzz_Tone(uint32_t freq, int32_t duration = 0);
 
 /* Encoder */
     void Encoder_Init();

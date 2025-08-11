@@ -25,7 +25,9 @@
 #ifndef __BUTTON_EVENT_H
 #define __BUTTON_EVENT_H
 
+#include <Arduino.h>
 #include <stdint.h>
+#include "main.h"
 
 class ButtonEvent
 {

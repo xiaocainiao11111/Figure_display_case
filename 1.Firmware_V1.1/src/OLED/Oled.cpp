@@ -1225,34 +1225,34 @@ void ui_proc() // 总的UI进程
 void Oled_init()
 {
     // Serial.begin(115200);
-    // Wire.begin(21,22,400000);
+    Wire.begin(21,22,400000);
     pinMode(BTN0, INPUT_PULLUP);
     pinMode(BTN1, INPUT_PULLUP);
     pinMode(BTN2, INPUT_PULLUP);
     key_init();
-    // u8g2.setBusClock(800000);
-    // u8g2.begin();
-    // u8g2.setFont(u8g2_font_wqy12_t_chinese1);
-    // // u8g2.setContrast(10);
+    u8g2.setBusClock(800000);
+    u8g2.begin();
+    u8g2.setFont(u8g2_font_wqy12_t_chinese1);
+    // u8g2.setContrast(10);
 
-    // buf_ptr = u8g2.getBufferPtr();                                        // 拿到buffer首地址
-    // buf_len = 8 * u8g2.getBufferTileHeight() * u8g2.getBufferTileWidth(); // 1024
-    // // Serial.println(buf_len);
+    buf_ptr = u8g2.getBufferPtr();                                        // 拿到buffer首地址
+    buf_len = 8 * u8g2.getBufferTileHeight() * u8g2.getBufferTileWidth(); // 1024
+    // Serial.println(buf_len);
 
-    // x = 4;
-    // y = y_trg = 0;
-    // line_y = line_y_trg = 1;
-    // pid_line_y = pid_line_y_trg = 1;
-    // ui_select = pid_select = icon_select = 0;
-    // icon_x = icon_x_trg = 0;
-    // app_y = app_y_trg = 0;
+    x = 4;
+    y = y_trg = 0;
+    line_y = line_y_trg = 1;
+    pid_line_y = pid_line_y_trg = 1;
+    ui_select = pid_select = icon_select = 0;
+    icon_x = icon_x_trg = 0;
+    app_y = app_y_trg = 0;
 
-    // box_width = box_width_trg = u8g2.getStrWidth(list[ui_select].select) + x * 2;         // 两边各多2
-    // pid_box_width = pid_box_width_trg = u8g2.getStrWidth(pid[pid_select].select) + x * 2; // 两边各多2
+    box_width = box_width_trg = u8g2.getStrWidth(list[ui_select].select) + x * 2;         // 两边各多2
+    pid_box_width = pid_box_width_trg = u8g2.getStrWidth(pid[pid_select].select) + x * 2; // 两边各多2
 
-    // ui_index = M_SELECT;
-    // // ui_index=M_TEXT_EDIT;
-    // ui_state = S_NONE;
+    ui_index = M_VIDEO;
+    // ui_index=M_TEXT_EDIT;
+    ui_state = S_NONE;
 }
 
 // void loop()

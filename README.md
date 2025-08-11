@@ -1,5 +1,10 @@
 # figure_display_case
+
 ![alt text](image.png)
+
+旋转编码器用法：需要两个状态一起判断
+![alt text](image-1.png)
+
 开发环境：
 
 屏幕库：
@@ -43,6 +48,7 @@ ui源码解析：
 先在proc里处理按键判断，只修改目标值，然后进行动画处理，动画是一直在处理的，其实
 
 参考工程：
+
 <https://gitee.com/wenzhengclub/super_knob>
 
 <https://github.com/xiaocainiao11111/ESP32_connect_XboxController>
@@ -50,6 +56,8 @@ ui源码解析：
 <https://github.com/unlir/XDrive>
 
 <https://github.com/peng-zhihui/Peak>
+
+<https://github.com/FASTSHIFT/X-TRACK>
 
 - select_ui_show变化：
 
@@ -62,7 +70,6 @@ line_y:7  line_y_trg:10  box_y:8  box_y_trg:16  y:0  y_trg:0
 line_y:10  line_y_trg:10  box_y:12  box_y_trg:16  y:0  y_trg:0
 
 line_y:10  line_y_trg:10  box_y:16  box_y_trg:16  y:0  y_trg:0  
-
 
 前言：如何看懂一份代码
 我的经验是按照做阅读理解的方式来看一份代码，速读全文，这时候义务教育发力了，
@@ -77,30 +84,22 @@ line_y:10  line_y_trg:10  box_y:16  box_y_trg:16  y:0  y_trg:0
 
 然后是一堆初始化函数，这里有个技巧：每个函数都全局搜索一下，看在哪些地方用了，可以加深自己都全文的理解。
 
-
-
-
-
-
 关于非线性平滑动画
-   - 动画算法
+
+- 动画算法
 
 关于非阻塞的线性动画
 
 着重讲下动画函数
 看着只有几行，但
 // 动画函数
-void animation(float *a, float *a_trg, uint8_t n)
+void animation(float *a, float*a_trg, uint8_t n)
 {
-  if (*a != *a_trg)
+  if (*a !=*a_trg)
   {
-    if (fabs(*a - *a_trg) < 0.15f)
-      *a = *a_trg;
+    if (fabs(*a -*a_trg) < 0.15f)
+      *a =*a_trg;
     else
       *a += (*a_trg - *a) / (ui.param[n] / 10.0f);
   }
 }
-
-
-
-

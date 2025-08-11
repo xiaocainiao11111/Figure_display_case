@@ -20,7 +20,7 @@ void HAL::Init()
     //     LV_LOG_WARN("lv_port_disp_init malloc failed!\n");
 
     // HAL::BT_Init(); // ToDo: some of the process below will interrupt BLE connection, find it out
-    HAL::Power_Init();
+    // HAL::Power_Init();
     // HAL::Backlight_Init();
     // HAL::Encoder_Init();
     // HAL::Buzz_init();
@@ -34,8 +34,8 @@ void HAL::Init()
 
 void HAL::Update()
 {
-    HAL::Power_Update();
-    HAL::Encoder_Update();
+    // HAL::Power_Update();
+    // HAL::Encoder_Update();
     // HAL::Audio_Update();
     // HAL::IMU_Update();
     // HAL::BT_Update();
