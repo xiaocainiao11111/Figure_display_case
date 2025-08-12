@@ -328,17 +328,17 @@ bool get_key_val(uint8_t ch)
     switch (ch)
     {
     case 0:
-        Serial.printf("btn0:%d  ", digitalRead(BTN0));
+        // Serial.printf("btn0:%d  ", digitalRead(BTN0));
         return digitalRead(BTN0);
 
         break;
     case 1:
-        Serial.printf("btn1:%d  ", digitalRead(BTN1));
+        // Serial.printf("btn1:%d  ", digitalRead(BTN1));
         return digitalRead(BTN1);
 
         break;
     case 2:
-        Serial.printf("btn2:%d\n", !digitalRead(BTN2));
+        // Serial.printf("btn2:%d\n", !digitalRead(BTN2));
         return !digitalRead(BTN2);
 
         break;

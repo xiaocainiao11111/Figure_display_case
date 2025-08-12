@@ -1,8 +1,8 @@
 #include "Encoder/ButtonEvent.h"
 
-static ButtonEvent EncoderPush(5000);
+static ButtonEvent EncoderPush(3000);
 
-static bool EncoderEnable = true;
+static bool EncoderEnable = true; // encoder使能
 static volatile int16_t EncoderDiff = 0;
 static bool EncoderDiffDisable = false;
 
@@ -43,18 +43,34 @@ static void Encoder_IrqHandler()
 // 按键回调
 static void Encoder_PushHandler(ButtonEvent *btn, int event)
 {
-    if (event == ButtonEvent::EVENT_PRESSED)
+
+    if (event == ButtonEvent::EVENT_CLICKED)
     {
-        EncoderDiffDisable = true;
+        Serial.printf("EVENT_CLICKED");
     }
-    else if (event == ButtonEvent::EVENT_RELEASED)
+    else if (event == ButtonEvent::EVENT_PRESSED)
     {
-        EncoderDiffDisable = false;
+        // Serial.printf("EVENT_PRESSED");
+    }
+    else if (event == ButtonEvent::EVENT_PRESSING)
+    {
+        // Serial.printf("EVENT_PRESSING");
     }
     else if (event == ButtonEvent::EVENT_LONG_PRESSED)
     {
-        // 长按关机
-        // ENCODER::Power_Shutdown();
+        // Serial.printf("EVENT_LONG_PRESSED");
+    }
+    else if (event == ButtonEvent::EVENT_RELEASED)
+    {
+        Serial.printf("EVENT_RELEASED");
+    }
+    else if (event == ButtonEvent::EVENT_SHORT_CLICKED)
+    {
+        Serial.printf("EVENT_SHORT_CLICKED");
+    }
+    else if (event == ButtonEvent::EVENT_DOUBLE_CLICKED)
+    {
+        Serial.printf("EVENT_DOUBLE_CLICKED");
     }
 }
 
@@ -64,11 +80,13 @@ static void Encoder_RotateHandler(int16_t diff)
 
 void ENCODER::Encoder_Init()
 {
-    pinMode(KEY_A, INPUT_PULLUP);
-    pinMode(KEY_B, INPUT_PULLUP);
+    // pinMode(KEY_A, INPUT_PULLUP);
+    // pinMode(KEY_B, INPUT_PULLUP);
     pinMode(KEY_EN, INPUT_PULLUP);
 
-    attachInterrupt(KEY_A, Encoder_IrqHandler, CHANGE);
+    // attachInterrupt(KEY_A, Encoder_IrqHandler, CHANGE);
+
+    Serial.printf("encoder init succ!!!");
 
     EncoderPush.EventAttach(Encoder_PushHandler);
 }
@@ -98,7 +116,7 @@ bool ENCODER::Encoder_GetIsPush()
     {
         return false;
     }
-
+    // Serial.print(digitalRead(KEY_EN));
     return (digitalRead(KEY_EN) == LOW);
 }
 

@@ -13,6 +13,13 @@
 #define UINT32_MAX 4294967295u
 #endif
 
+/*
+用法：
+1、实现millis()，esp32不用实现
+2、在初始化里注册回调函数到EventAttach
+3、把EventMonitor放10ms时间片里，参数是实时按键状态，因此按键是绑定在事件里的，而不是class实例的时候
+*/
+
 /**
  * @brief  按键事件构造函数
  * @param  LongPressTimeMs_Set: 按键长按触发超时设置
@@ -60,7 +67,7 @@ uint32_t ButtonEvent::GetTickElaps(uint32_t prevTick)
 }
 
 /**
- * @brief  按键事件绑定
+ * @brief  按键事件绑定，参数是回调函数，相当于ms_task,这里把Encoder_PushHandler放里面
  * @param  function: 回调函数指针
  * @retval 无
  */
@@ -70,7 +77,7 @@ void ButtonEvent::EventAttach(FuncCallback_t function)
 }
 
 /**
- * @brief  监控事件，建议扫描周期10ms
+ * @brief  监控事件，建议扫描周期10ms，放10ms时间片里，参数是按键状态，这里用Encoder_GetIsPush，也可以直接读按键
  * @param  nowState: 当前按键状态
  * @retval 无
  */

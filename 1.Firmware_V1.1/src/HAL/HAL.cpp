@@ -14,22 +14,23 @@ void HAL::Init()
     Serial.println("Author: " VERSION_AUTHOR_NAME);
     Serial.println("DATA: " VERSION_DATA);
 
-    // Move the malloc process to Init() to make sure that the largest heap can be used for this buffer.
-    // lv_disp_buf_p = static_cast<lv_color_t *>(malloc(DISP_BUF_SIZE * sizeof(lv_color_t))); // 类型强制转换为<>
-    // if (lv_disp_buf_p == nullptr)
-    //     LV_LOG_WARN("lv_port_disp_init malloc failed!\n");
+    pinMode(CONFIG_BAT_CHG_DET_PIN, INPUT);
 
-    // HAL::BT_Init(); // ToDo: some of the process below will interrupt BLE connection, find it out
-    // HAL::Power_Init();
-    // HAL::Backlight_Init();
-    // HAL::Encoder_Init();
-    // HAL::Buzz_init();
-    // HAL::Audio_Init();
-    // HAL::SD_Init();
-    // HAL::I2C_Init(true);
-    // HAL::IMU_Init();
+    /*电源使能保持*/
+    Serial.println("Power: Waiting...");
+    pinMode(CONFIG_POWER_EN_PIN, OUTPUT);
+    digitalWrite(CONFIG_POWER_EN_PIN, LOW);
+    delay(100);
+    digitalWrite(CONFIG_POWER_EN_PIN, HIGH);
+    Serial.println("Power: ON");
 
-    // HAL::Audio_PlayMusic("Startup");
+    /*电池检测*/
+    pinMode(CONFIG_BAT_DET_PIN, INPUT);
+    pinMode(CONFIG_BAT_CHG_DET_PIN, INPUT_PULLUP);
+
+    Power_SetAutoLowPowerTimeout(60);
+    Power_HandleTimeUpdate();
+    Power_SetAutoLowPowerEnable(false);
 }
 
 void HAL::Update()

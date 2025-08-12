@@ -27,7 +27,7 @@ void Task_start(void *pvParameters)
     while (1)
     {
         adc = analogRead(CONFIG_BAT_DET_PIN);
-        Serial.println(adc);
+        // Serial.println(adc);
         vTaskDelay(1000);
     }
 }
@@ -44,11 +44,11 @@ void Task_key(void *pvParameters)
 
 void Task_oled(void *pvParameters)
 {
-    Oled_init();
+    // Oled_init();
     while (1)
     {
         key_scan();
-        ui_proc();
+        // ui_proc();
         vTaskDelay(10);
     }
 }
@@ -103,7 +103,7 @@ void setup()
     xTaskCreatePinnedToCore(
         Task_ws2812, "Task_ws2812", 1024, NULL, 4, &Task_ws2812_Handle, ESP32_RUNNING_CORE);
     xTaskCreatePinnedToCore(
-        Task_key, "Task_key", 1024, NULL, 4, &Task_key_Handle, ESP32_RUNNING_CORE);
+        Task_key, "Task_key", 2048, NULL, 4, &Task_key_Handle, ESP32_RUNNING_CORE);
     xTaskCreatePinnedToCore(
         Task_motor, "Task_motor", 1024, NULL, 4, &Task_motor_Handle, ESP32_RUNNING_CORE);
     xTaskCreatePinnedToCore(
