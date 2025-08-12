@@ -15,7 +15,6 @@ QueueHandle_t iot_control_Queue; // ws2812接收消息队列
 QueueHandle_t key_Queue;         // 按键接收消息队列
 QueueHandle_t oled_Queue;        // oled消息队列
 
-_ws2812_message WS2812_MSG;
 uint16_t adc = 0;
 
 Adafruit_NeoPixel RGB3 = Adafruit_NeoPixel(RGB_3_NUM, RGB_PIN_3, NEO_GRB + NEO_KHZ800);
@@ -44,11 +43,11 @@ void Task_key(void *pvParameters)
 
 void Task_oled(void *pvParameters)
 {
-    // Oled_init();
+    Oled_init();
     while (1)
     {
         key_scan();
-        // ui_proc();
+        ui_proc();
         vTaskDelay(10);
     }
 }

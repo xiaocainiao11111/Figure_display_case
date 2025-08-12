@@ -1,6 +1,11 @@
 #include "TB6612.h"
 #include <Arduino.h>
 #include <driver/ledc.h>
+
+// 增加位置模式
+
+
+
 Motor::Motor(int in_pin_1, int in_pin_2, int pwm_pin, int freq, int channel)
 {
     In1 = in_pin_1;

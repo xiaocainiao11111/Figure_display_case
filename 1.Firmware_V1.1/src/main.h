@@ -45,30 +45,3 @@
 #define WS2812_NUM_1 4 // 定义led个数，决定数组长度
 #define WS2812_NUM_2 4 // 定义led个数，决定数组长度
 #define WS2812_NUM_3 4 // 定义led个数，决定数组长度
-
-struct _knob_message
-{
-    int ucMessageID;
-    char ucData[100];
-};
-
-struct _ws2812_message
-{
-    int ws2812_status;
-    int ws2812_time;
-};
-struct _iot_control_message
-{
-    int ucMessageID;
-    char ucData[100];
-};
-
-// extern _knob_message LVGL_MSG;
-// extern _knob_message MOTOR_MSG;
-// extern _ws2812_message WS2812_MSG;
-// extern _iot_control_message IOT_CONTROL_MSG;
-
-// extern QueueHandle_t motor_msg_Queue;  //lvgl 接收消息队列
-// extern QueueHandle_t motor_rcv_Queue;  //motor 接收消息队列
-// extern QueueHandle_t ws2812_rcv_Queue;  //ws2812 接收消息队列
-// extern QueueHandle_t iot_control_Queue;  //ws2812 接收消息队列

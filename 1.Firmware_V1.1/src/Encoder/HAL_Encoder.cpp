@@ -2,8 +2,8 @@
 
 static ButtonEvent EncoderPush(3000);
 
-static bool EncoderEnable = true; // encoder使能
-static volatile int16_t EncoderDiff = 0;
+static bool EncoderEnable = true;        // encoder使能
+static volatile int16_t EncoderDiff = 0; // encoder脉冲，用一次就清零
 static bool EncoderDiffDisable = false;
 
 static void Encoder_IrqHandler()
@@ -84,6 +84,7 @@ void ENCODER::Encoder_Init()
     // pinMode(KEY_B, INPUT_PULLUP);
     pinMode(KEY_EN, INPUT_PULLUP);
 
+    // 脉冲还测不了，有个脚没上拉能力
     // attachInterrupt(KEY_A, Encoder_IrqHandler, CHANGE);
 
     Serial.printf("encoder init succ!!!");

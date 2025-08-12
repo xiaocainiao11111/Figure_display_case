@@ -1250,7 +1250,7 @@ void Oled_init()
     box_width = box_width_trg = u8g2.getStrWidth(list[ui_select].select) + x * 2;         // 两边各多2
     pid_box_width = pid_box_width_trg = u8g2.getStrWidth(pid[pid_select].select) + x * 2; // 两边各多2
 
-    ui_index = M_VIDEO;
+    ui_index = M_LOGO;
     // ui_index=M_TEXT_EDIT;
     ui_state = S_NONE;
 }
