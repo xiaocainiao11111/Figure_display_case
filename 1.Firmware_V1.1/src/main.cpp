@@ -46,7 +46,7 @@ void Task_oled(void *pvParameters)
     Oled_init();
     while (1)
     {
-        key_scan();
+        // key_scan();
         ui_proc();
         vTaskDelay(10);
     }
