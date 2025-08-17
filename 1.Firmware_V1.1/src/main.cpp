@@ -1,4 +1,5 @@
 #include <main.h>
+#include <Bluepad32.h>
 
 // #define POWER_CLOCK 26
 #define ESP32_RUNNING_CORE 1 // 内核选择   LVGL用核心0  其他用核心1
