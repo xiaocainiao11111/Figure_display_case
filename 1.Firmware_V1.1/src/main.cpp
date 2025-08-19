@@ -1,5 +1,4 @@
 #include <main.h>
-#include <Bluepad32.h>
 
 // #define POWER_CLOCK 26
 #define ESP32_RUNNING_CORE 1 // 内核选择   LVGL用核心0  其他用核心1
@@ -47,7 +46,7 @@ void Task_oled(void *pvParameters)
     Oled_init();
     while (1)
     {
-        // key_scan();
+        key_scan();
         ui_proc();
         vTaskDelay(10);
     }

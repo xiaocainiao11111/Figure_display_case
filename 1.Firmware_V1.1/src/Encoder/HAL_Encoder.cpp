@@ -36,9 +36,12 @@ static void Encoder_IrqHandler()
     if (count != countLast)
     {
         EncoderDiff += (count - countLast) > 0 ? 1 : -1;
+        // Serial.print(EncoderDiff);
         countLast = count;
     }
 }
+
+bool key_en =0;
 
 // 按键回调
 static void Encoder_PushHandler(ButtonEvent *btn, int event)
@@ -46,7 +49,7 @@ static void Encoder_PushHandler(ButtonEvent *btn, int event)
 
     if (event == ButtonEvent::EVENT_CLICKED)
     {
-        Serial.printf("EVENT_CLICKED");
+        // Serial.printf("EVENT_CLICKED");
     }
     else if (event == ButtonEvent::EVENT_PRESSED)
     {
@@ -62,15 +65,18 @@ static void Encoder_PushHandler(ButtonEvent *btn, int event)
     }
     else if (event == ButtonEvent::EVENT_RELEASED)
     {
-        Serial.printf("EVENT_RELEASED");
+        // Serial.printf("EVENT_RELEASED");
     }
     else if (event == ButtonEvent::EVENT_SHORT_CLICKED)
     {
-        Serial.printf("EVENT_SHORT_CLICKED");
+        // Serial.printf("EVENT_SHORT_CLICKED");
+        // key_msg.id = 2;
+        // key_msg.pressed = true;
+        key_en=1;
     }
     else if (event == ButtonEvent::EVENT_DOUBLE_CLICKED)
     {
-        Serial.printf("EVENT_DOUBLE_CLICKED");
+        // Serial.printf("EVENT_DOUBLE_CLICKED");
     }
 }
 
@@ -80,12 +86,12 @@ static void Encoder_RotateHandler(int16_t diff)
 
 void ENCODER::Encoder_Init()
 {
-    // pinMode(KEY_A, INPUT_PULLUP);
-    // pinMode(KEY_B, INPUT_PULLUP);
+    pinMode(KEY_A, INPUT_PULLUP);
+    pinMode(KEY_B, INPUT_PULLUP);
     pinMode(KEY_EN, INPUT_PULLUP);
 
     // 脉冲还测不了，有个脚没上拉能力
-    // attachInterrupt(KEY_A, Encoder_IrqHandler, CHANGE);
+    attachInterrupt(KEY_A, Encoder_IrqHandler, CHANGE);
 
     Serial.printf("encoder init succ!!!");
 
@@ -104,7 +110,7 @@ int16_t ENCODER::Encoder_GetDiff()
     {
         // EncoderDiff是实际的脉冲数；把本次变量用掉了，需要重新置0
         EncoderDiff = 0;
-        Encoder_RotateHandler(diff);
+        // Encoder_RotateHandler(diff);
     }
 
     return diff;

@@ -1,7 +1,7 @@
-#include <Arduino.h>
-#include <U8g2lib.h>
-#include <Wire.h>
-#include "main.h"
+// #include <Arduino.h>
+// #include <U8g2lib.h>
+// #include <Wire.h>
+// #include "main.h"
 
 // #define SPEED 4 // 16的因数
 // #define ICON_SPEED 12
@@ -14,7 +14,7 @@
 
 // void chart_draw_frame();
 
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/OLED_SDA);
+// U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/OLED_SDA);
 
 // PROGMEM const uint8_t icon_pic[][200]{
 //     {
@@ -328,17 +328,17 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 //     switch (ch)
 //     {
 //     case 0:
-//         // Serial.printf("btn0:%d  ", digitalRead(BTN0));
+//         // // Serial.printf("btn0:%d  ", digitalRead(BTN0));
 //         return digitalRead(BTN0);
 
 //         break;
 //     case 1:
-//         // Serial.printf("btn1:%d  ", digitalRead(BTN1));
+//         // // Serial.printf("btn1:%d  ", digitalRead(BTN1));
 //         return digitalRead(BTN1);
 
 //         break;
 //     case 2:
-//         // Serial.printf("btn2:%d\n", !digitalRead(BTN2));
+//         // // Serial.printf("btn2:%d\n", !digitalRead(BTN2));
 //         return !digitalRead(BTN2);
 
 //         break;
@@ -357,25 +357,48 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void key_scan()
 // {
-//     for (uint8_t i = 0; i < (sizeof(key) / sizeof(KEY)); ++i)
+//     // for (uint8_t i = 0; i < (sizeof(key) / sizeof(KEY)); ++i)
+//     // {
+//     //     key[i].val = get_key_val(i);       // 获取键值
+//     //     if (key[i].last_val != key[i].val) // 发生改变
+//     //     {
+//     //         key[i].last_val = key[i].val; // 更新状态
+//     //         if (key[i].val == LOW)
+//     //         {
+//     //             key_msg.id = i;
+//     //             key_msg.pressed = true;
+//     //         }
+//     //     }
+//     // }
+
+//     int16_t enc_diff = ENCODER::Encoder_GetDiff();
+
+//     if (enc_diff > 0)
 //     {
-//         key[i].val = get_key_val(i);       // 获取键值
-//         if (key[i].last_val != key[i].val) // 发生改变
-//         {
-//             key[i].last_val = key[i].val; // 更新状态
-//             if (key[i].val == LOW)
-//             {
-//                 key_msg.id = i;
-//                 key_msg.pressed = true;
-//             }
-//         }
+//         key_msg.id = 0;
+//         key_msg.pressed = true;
+//         Serial.printf("1");
+//     }
+//     else if (enc_diff < 0)
+//     {
+//         key_msg.id = 1;
+//         key_msg.pressed = true;
+//         Serial.printf("2");
+//     }
+
+//     if (key_en)
+//     {
+//         key_en = 0;
+//         key_msg.id = 2;
+//         key_msg.pressed = true;
+//         Serial.printf("3");
 //     }
 // }
 
 // // 移动函数
 // bool move(int16_t *a, int16_t *a_trg)
 // {
-//     Serial.println("move");
+//     // Serial.println("move");
 //     if (*a < *a_trg)
 //     {
 //         *a += SPEED;
@@ -398,7 +421,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 // // 移动函数
 // bool move_icon(int16_t *a, int16_t *a_trg)
 // {
-//     Serial.println("move_icon");
+//     // Serial.println("move_icon");
 
 //     if (*a < *a_trg)
 //     {
@@ -422,7 +445,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 // // 宽度移动函数
 // bool move_width(uint8_t *a, uint8_t *a_trg, uint8_t select, uint8_t id)
 // {
-//     Serial.println("move_width");
+//     // Serial.println("move_width");
 
 //     if (*a < *a_trg)
 //     {
@@ -468,7 +491,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 // // 进度条移动函数
 // bool move_bar(uint8_t *a, uint8_t *a_trg)
 // {
-//     Serial.println("move_bar");
+//     // Serial.println("move_bar");
 
 //     if (*a < *a_trg)
 //     {
@@ -496,7 +519,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 // // 文字编辑函数
 // void text_edit(bool dir, uint8_t index)
 // {
-//     Serial.println("text_edit");
+//     // Serial.println("text_edit");
 //     if (!dir)
 //     {
 //         if (name[index] >= 'A' && name[index] <= 'Z') // 大写字母
@@ -560,7 +583,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 // // 消失函数
 // void disappear()
 // {
-//     Serial.println("disappear");
+//     // Serial.println("disappear");
 
 //     switch (disappear_step)
 //     {
@@ -604,7 +627,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void logo_ui_show() // 显示logo
 // {
-//     Serial.println("logo_ui_show");
+//     // Serial.println("logo_ui_show");
 
 //     u8g2.drawXBMP(0, 0, 128, 64, LOGO);
 
@@ -623,7 +646,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void select_ui_show() // 选择界面，包括右边滑块和左边选择框
 // {
-//     Serial.println("select_ui_show");
+//     // Serial.println("select_ui_show");
 
 //     move_bar(&line_y, &line_y_trg);
 //     move(&y, &y_trg);
@@ -645,12 +668,12 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 //     u8g2.setDrawColor(2);
 //     u8g2.drawRBox(0, box_y, box_width, 16, 1);
 //     u8g2.setDrawColor(1);
-//     Serial.printf("line_y:%d  line_y_trg:%d  box_y:%d  box_y_trg:%d  y:%d  y_trg:%d  \n", line_y, line_y_trg, box_y, box_y_trg, y, y_trg);
+//     // Serial.printf("line_y:%d  line_y_trg:%d  box_y:%d  box_y_trg:%d  y:%d  y_trg:%d  \n", line_y, line_y_trg, box_y, box_y_trg, y, y_trg);
 // }
 
 // void pid_ui_show() // PID界面
 // {
-//     Serial.println("pid_ui_show");
+//     // Serial.println("pid_ui_show");
 
 //     move_bar(&pid_line_y, &pid_line_y_trg);
 //     move(&pid_box_y, &pid_box_y_trg);
@@ -670,13 +693,13 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 //     u8g2.setDrawColor(1);
 //     u8g2.drawVLine(125, pid_line_y, 14);
 //     u8g2.drawVLine(127, pid_line_y, 14);
-//     Serial.printf("pid_line_y:%d  pid_line_y_trg:%d  pid_box_y:%d  pid_box_y_trg:%d  pid_box_width:%d  pid_box_width_trg:%d  pid_select:%d\n",
-//                   pid_line_y, pid_line_y_trg, pid_box_y, pid_box_y_trg, pid_box_width, pid_box_width_trg, pid_select);
+//     // Serial.printf("pid_line_y:%d  pid_line_y_trg:%d  pid_box_y:%d  pid_box_y_trg:%d  pid_box_width:%d  pid_box_width_trg:%d  pid_select:%d\n",
+//     //   pid_line_y, pid_line_y_trg, pid_box_y, pid_box_y_trg, pid_box_width, pid_box_width_trg, pid_select);
 // }
 
 // void pid_edit_ui_show() // 显示PID编辑
 // {
-//     Serial.println("pid_edit_ui_show");
+//     // Serial.println("pid_edit_ui_show");
 
 //     u8g2.drawBox(16, 16, 96, 31);
 //     u8g2.setDrawColor(2);
@@ -705,13 +728,13 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 //     u8g2.setCursor(81, 44);
 //     u8g2.print(Kpid[pid_select]);
-//     Serial.printf("Kpid[pid_select] / PID_MAX * 56:%d\n",
-//                   (uint8_t)(Kpid[pid_select] / PID_MAX * 56));
+//     // Serial.printf("Kpid[pid_select] / PID_MAX * 56:%d\n",
+//     //   (uint8_t)(Kpid[pid_select] / PID_MAX * 56));
 // }
 
 // void icon_ui_show(void) // 显示icon
 // {
-//     Serial.println("icon_ui_show");
+//     // Serial.println("icon_ui_show");
 
 //     move_icon(&icon_x, &icon_x_trg);
 //     move(&app_y, &app_y_trg);
@@ -723,13 +746,13 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 //         u8g2.drawStr((128 - u8g2.getStrWidth(icon[i].select)) / 2, 62 - app_y + i * 16, icon[i].select);
 //         u8g2.setMaxClipWindow();
 //     }
-//     Serial.printf("icon_x:%d  icon_x_trg:%d  app_y:%d  app_y_trg:%d\n",
-//                   icon_x, icon_x_trg, app_y, app_y_trg);
+//     // Serial.printf("icon_x:%d  icon_x_trg:%d  app_y:%d  app_y_trg:%d\n",
+//     //   icon_x, icon_x_trg, app_y, app_y_trg);
 // }
 
 // void chart_ui_show() // chart界面
 // {
-//     Serial.println("chart_ui_show");
+//     // Serial.println("chart_ui_show");
 
 //     if (!frame_is_drawed) // 框架只画一遍
 //     {
@@ -765,13 +788,13 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 //     u8g2.setCursor(96, 12);
 //     u8g2.print(angle);
 
-//     // Serial.printf("icon_x:%d  icon_x_trg:%d  app_y:%d  app_y_trg:%d\n",
+//     // // Serial.printf("icon_x:%d  icon_x_trg:%d  app_y:%d  app_y_trg:%d\n",
 //     //               icon_x, icon_x_trg, app_y, app_y_trg);
 // }
 
 // void chart_draw_frame() // chart界面
 // {
-//     Serial.println("chart_draw_frame");
+//     // Serial.println("chart_draw_frame");
 
 //     u8g2.drawStr(4, 12, "Real time angle :");
 //     u8g2.drawRBox(4, 18, 120, 46, 8);
@@ -791,7 +814,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void text_edit_ui_show()
 // {
-//     Serial.println("text_edit_ui_show");
+//     // Serial.println("text_edit_ui_show");
 
 //     u8g2.drawRFrame(4, 6, 120, 52, 8);
 //     u8g2.drawStr((128 - u8g2.getStrWidth("--Text Editor--")) / 2, 20, "--Text Editor--");
@@ -846,7 +869,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void about_ui_show() // about界面
 // {
-//     Serial.println("about_ui_show");
+//     // Serial.println("about_ui_show");
 
 //     u8g2.drawStr(2, 12, "MCU : ESP32");
 //     u8g2.drawStr(2, 28, "FLASH : 4MB");
@@ -863,7 +886,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void logo_proc() // logo界面处理函数
 // {
-//     Serial.println("logo_proc");
+//     // Serial.println("logo_proc");
 
 //     if (key_msg.pressed)
 //     {
@@ -876,7 +899,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void pid_edit_proc(void) // pid编辑界面处理函数
 // {
-//     Serial.println("pid_edit_proc");
+//     // Serial.println("pid_edit_proc");
 
 //     if (key_msg.pressed)
 //     {
@@ -908,7 +931,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void pid_proc() // pid界面处理函数
 // {
-//     Serial.println("pid_proc");
+//     // Serial.println("pid_proc");
 
 //     pid_ui_show();
 //     if (key_msg.pressed)
@@ -964,7 +987,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void select_proc(void) // 选择界面处理
 // {
-//     Serial.println("select_proc");
+//     // Serial.println("select_proc");
 
 //     if (key_msg.pressed)
 //     {
@@ -1031,11 +1054,11 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 //             default:
 //                 break;
 //             }
-//         // Serial.println("Btn2");
+//         // // Serial.println("Btn2");
 //         default:
 //             break;
 //         }
-//         // Serial.println(ui_select);
+//         // // Serial.println(ui_select);
 //         box_width_trg = u8g2.getStrWidth(list[ui_select].select) + x * 2;
 //     }
 //     select_ui_show();
@@ -1043,7 +1066,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void icon_proc(void) // icon界面处理
 // {
-//     Serial.println("icon_proc");
+//     // Serial.println("icon_proc");
 
 //     icon_ui_show();
 //     if (key_msg.pressed)
@@ -1082,7 +1105,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void chart_proc() // chart界面处理函数
 // {
-//     Serial.println("chart_proc");
+//     // Serial.println("chart_proc");
 
 //     chart_ui_show();
 //     if (key_msg.pressed)
@@ -1097,7 +1120,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void text_edit_proc()
 // {
-//     Serial.println("text_edit_proc");
+//     // Serial.println("text_edit_proc");
 
 //     text_edit_ui_show();
 //     if (key_msg.pressed)
@@ -1161,7 +1184,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void about_proc() // about界面处理函数
 // {
-//     Serial.println("about_proc");
+//     // Serial.println("about_proc");
 
 //     if (key_msg.pressed)
 //     {
@@ -1175,7 +1198,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 // void ui_proc() // 总的UI进程
 // {
-//     Serial.println("ui_proc");
+//     // Serial.println("ui_proc");
 
 //     switch (ui_state)
 //     {
@@ -1224,12 +1247,12 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 // // 注意：屏幕启动失败会堵塞住
 // void Oled_init()
 // {
-//     // Serial.begin(115200);
-//     Wire.begin(21,22,400000);
-//     pinMode(BTN0, INPUT_PULLUP);
-//     pinMode(BTN1, INPUT_PULLUP);
-//     pinMode(BTN2, INPUT_PULLUP);
-//     key_init();
+//     // // Serial.begin(115200);
+//     Wire.begin(21, 22, 400000);
+//     // pinMode(BTN0, INPUT_PULLUP);
+//     // pinMode(BTN1, INPUT_PULLUP);
+//     // pinMode(BTN2, INPUT_PULLUP);
+//     // key_init();
 //     u8g2.setBusClock(800000);
 //     u8g2.begin();
 //     u8g2.setFont(u8g2_font_wqy12_t_chinese1);
@@ -1237,7 +1260,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 
 //     buf_ptr = u8g2.getBufferPtr();                                        // 拿到buffer首地址
 //     buf_len = 8 * u8g2.getBufferTileHeight() * u8g2.getBufferTileWidth(); // 1024
-//     // Serial.println(buf_len);
+//     // // Serial.println(buf_len);
 
 //     x = 4;
 //     y = y_trg = 0;
@@ -1261,25 +1284,13 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/
 // //     ui_proc();
 // // }
 
-/*
+//......................................................................................
 
-//总目录，缩进表示页面层级
-enum
-{
-  M_WINDOW,
-  M_SLEEP,
-    M_MAIN,
-      M_EDITOR,
-        M_KNOB,
-          M_KRF,
-          M_KPF,
-      M_VOLT,
-      M_SETTING,
-        M_ABOUT,
-};
-
-*/
-
+#include <Arduino.h>
+#include <U8g2lib.h>
+#include <Wire.h>
+#include "main.h"
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/OLED_SCL, /* data=*/OLED_SDA);
 // 总目录，缩进表示页面层级
 enum
 {
@@ -1312,7 +1323,7 @@ typedef struct MENU
 } M_SELECT;
 
 M_SELECT main_menu[]{
-    {"Sleep"},
+    {"Light"},
     {"Editor"},
     {"Volt"},
     {"Setting"},
@@ -1942,6 +1953,31 @@ void btn_scan()
     }
 }
 
+void key_scan()
+{
+    int16_t enc_diff = ENCODER::Encoder_GetDiff();
+
+    if (enc_diff > 0)
+    {
+        btn.id = 0;
+        btn.pressed = true;
+        Serial.printf("1");
+    }
+    else if (enc_diff < 0)
+    {
+        btn.id = 1;
+        btn.pressed = true;
+        Serial.printf("2");
+    }
+
+    if (key_en)
+    {
+        key_en = 0;
+        btn.id = 2;
+        btn.pressed = true;
+        Serial.printf("3");
+    }
+}
 void btn_init()
 {
     pinMode(AIO, INPUT);
@@ -3207,9 +3243,3 @@ void Oled_init()
     oled_init();
     // btn_init();
 }
-
-// void loop()
-// {
-//   btn_scan();
-//   ui_proc();
-// }

@@ -14,7 +14,6 @@
 #include "RGB.h"
 #include "TB6612.h"
 #include "OLED/Oled.h"
-#include "Controller/Controller.h"
 
 #define ENABLE_BLE_KEY_BOARD
 #define ENABLE_WS2812_LED
@@ -39,7 +38,7 @@
 #define OLED_SDA 21
 
 // 按键引脚
-#define KEY_A 34
+#define KEY_A 14
 #define KEY_B 33
 #define KEY_EN 32
 
