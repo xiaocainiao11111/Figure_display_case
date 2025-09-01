@@ -1,32 +1,24 @@
-# figure_display_case
-
+# Figure_display_case
+## 开发环境：
+见https://github.com/xiaocainiao11111/ESP32_connect_XboxController
+  ## 知识点
+  #### ESP32的奇妙io
 ![alt text](image.png)
 
-旋转编码器用法：需要两个状态一起判断
+   #### 旋转编码器用法
+   需要两个状态一起判断
 ![alt text](image-1.png)
 
-开发环境：
-
-屏幕库：
-WouoUI
-注意u8g2库连接屏幕失败的话会堵塞
-
-功能：
-
-注意：
-
-1、烧录要按住拨轮
-2、不接屏幕调试时要注释掉OLED任务，不然会堵塞
 
 
-计划：
+#### 屏幕库：
+U8G2 + WouoUI，见参考工程
 
-触摸
-灯条
-小程序
-换屏幕
+#### ui学习
 
-u8g2.drawRBox（绘制填充的圆角矩形）
+**看代码注释吧**
+
+  u8g2.drawRBox（绘制填充的圆角矩形）
 
 x, y: 矩形左上角的坐标
    w, h: 矩形的宽度和高度
@@ -46,12 +38,46 @@ std::ceil(x)
 long map(long x, long in_min, long in_max, long out_min, long out_max)
 将一个数从一个范围线性映射到另一个范围
 
-u8g2的缓存及瓦片机制
+u8g2的缓存及瓦片机制。。。。。。
 
-ui源码解析：
-先在proc里处理按键判断，只修改目标值，然后进行动画处理，动画是一直在处理的，其实
 
-参考工程：
+
+
+
+>select_ui_show变化：
+>
+>line_y:1  line_y_trg:1  box_y:0  box_y_trg:0  y:0  y_trg:0  
+>
+>line_y:4  line_y_trg:10  box_y:4  box_y_trg:16  y:0  y_trg:0  
+>
+>line_y:7  line_y_trg:10  box_y:8  box_y_trg:16  y:0  y_trg:0
+>
+>line_y:10  line_y_trg:10  box_y:12  box_y_trg:16  y:0  y_trg:0
+>
+>line_y:10  line_y_trg:10  box_y:16  box_y_trg:16  y:0  y_trg:0  
+
+#### 动画相关
+关于非线性平滑动画。。。。
+
+关于非阻塞的线性动画。。。。
+
+## 注意
+
+1、烧录要按住拨轮
+2、u8g2库连接屏幕失败的话会堵塞线程，不接屏幕调试时要注释掉OLED任务，不然会卡死
+
+
+## 后续计划
+
+触摸
+灯条
+小程序
+换屏幕
+
+
+
+
+## 参考工程：
 
 <https://gitee.com/wenzhengclub/super_knob>
 
@@ -62,22 +88,3 @@ ui源码解析：
 <https://github.com/peng-zhihui/Peak>
 
 <https://github.com/FASTSHIFT/X-TRACK>
-
-- select_ui_show变化：
-
-line_y:1  line_y_trg:1  box_y:0  box_y_trg:0  y:0  y_trg:0  
-
-line_y:4  line_y_trg:10  box_y:4  box_y_trg:16  y:0  y_trg:0  
-
-line_y:7  line_y_trg:10  box_y:8  box_y_trg:16  y:0  y_trg:0
-
-line_y:10  line_y_trg:10  box_y:12  box_y_trg:16  y:0  y_trg:0
-
-line_y:10  line_y_trg:10  box_y:16  box_y_trg:16  y:0  y_trg:0  
-
-
-关于非线性平滑动画
-
-- 动画算法
-
-关于非阻塞的线性动画
