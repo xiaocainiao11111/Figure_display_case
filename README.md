@@ -1,8 +1,12 @@
 # Figure_display_case
 ## 文件介绍
+
 1.oled_test：仅显示ui和其它一些小功能
+
 2.controller_test：手柄和ui全功能
+
 3.hardware：硬件，有bug暂不开了，后续完善再开，可以随便找个开发板也能用
+
 
 ## 开发环境：
 见https://github.com/xiaocainiao11111/ESP32_connect_XboxController
