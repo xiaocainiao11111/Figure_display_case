@@ -1,3 +1,6 @@
+#ifndef __TB6612_H__
+#define __TB6612_H__
+
 #include <Arduino.h>
 #include <driver/ledc.h>
 
@@ -24,3 +27,5 @@ private:
     void fwd(int speed);
     void rev(int speed);
 };
+
+#endif // __TB6612_H__

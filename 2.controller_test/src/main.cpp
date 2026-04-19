@@ -1,38 +1,65 @@
+/**
+ * @file   main.cpp
+ * @author LZY (original: congsir)
+ * @brief  Controller firmware - main entry point (refactored OLED version)
+ *
+ * Uses the modularized OledUI library (OledDriver + OledUI + OledMenus).
+ */
+
 #include <Arduino.h>
-#include "Controller/Controller.h"
+#include "HAL/HAL.h"
+#include "Encoder/HAL_Encoder.h"
+#include "RGB.h"
+#include "TB6612.h"
+#include "OledUI/OledDriver.h"
+#include "OledUI/OledUI.h"
 #include "main.h"
 
-TaskHandle_t Task_controller_Handle; // 初始任务
+// ===========================
+// Task handles
+// ===========================
+TaskHandle_t Task_controller_Handle;
+TaskHandle_t Task_start_Handle;
+TaskHandle_t Task_ws2812_Handle;
+TaskHandle_t Task_motor_Handle;
+TaskHandle_t Task_key_Handle;
+TaskHandle_t Task_oled_Handle;
 
-TaskHandle_t Task_start_Handle;  // 初始任务
-TaskHandle_t Task_ws2812_Handle; // ws2812 任务
-TaskHandle_t Task_motor_Handle;  // motor 任务
-TaskHandle_t Task_key_Handle;    // 按键任务
-TaskHandle_t Task_update_Handle; // 更新任务
-TaskHandle_t Task_oled_Handle;   // oled任务
+// ===========================
+// Queues
+// ===========================
+QueueHandle_t start_Queue;
+QueueHandle_t iot_control_Queue;
+QueueHandle_t key_Queue;
+QueueHandle_t oled_Queue;
 
-QueueHandle_t start_Queue;       // 消息队列
-QueueHandle_t iot_control_Queue; // ws2812接收消息队列
-QueueHandle_t key_Queue;         // 按键接收消息队列
-QueueHandle_t oled_Queue;        // oled消息队列
-
+// ===========================
+// Global objects
+// ===========================
 uint16_t adc = 0;
 
 Adafruit_NeoPixel RGB3 = Adafruit_NeoPixel(RGB_3_NUM, RGB_PIN_3, NEO_GRB + NEO_KHZ800);
 Motor motor(MOTOR_PIN_1, MOTOR_PIN_2, MOTOR_PWM, 1000, 1);
 
-void Task_start(void *pvParameters)
-{
+// key_en is defined in HAL_Encoder.cpp (declared in HAL_Encoder.h)
+// gamepad_axis is defined in Controller.cpp (declared in Controller.h)
 
+// ===========================
+// Task: Start / monitoring
+// ===========================
+void Task_start(void* pvParameters)
+{
     while (1)
     {
         adc = analogRead(CONFIG_BAT_DET_PIN);
-        // Serial.println(adc);
         vTaskDelay(1000);
     }
 }
 
-void Task_key(void *pvParameters)
+// ===========================
+// Task: Encoder input
+// ===========================
+void Task_key(void* pvParameters)
 {
     ENCODER::Encoder_Init();
     while (1)
@@ -42,91 +69,102 @@ void Task_key(void *pvParameters)
     }
 }
 
-void Task_oled(void *pvParameters)
+// ===========================
+// Task: OLED UI
+// ===========================
+void Task_oled(void* pvParameters)
 {
-    Oled_init();
+    // Initialize the entire UI subsystem
+    OledUI::Init();
+
     while (1)
     {
-        key_scan();
-        ui_proc();
+        // Key scan + UI render + sendBuffer
+        OledUI::Task();
         vTaskDelay(1);
     }
 }
 
-void Task_ws2812(void *pvParameters)
+// ===========================
+// Task: WS2812 RGB strip
+// ===========================
+void Task_ws2812(void* pvParameters)
 {
-    RGB3.begin();            // INITIALIZE NeoPixel strip object (REQUIRED)把对应pin设置为输出
-    RGB3.show();             // Turn OFF all pixels ASAP
-    RGB3.setBrightness(255); // Set BRIGHTNESS to about 1/5 (max = 255)，设置亮度
-    // 注意：只有这三行灯不会亮
+    RGB3.begin();
+    RGB3.show();
+    RGB3.setBrightness(255);
+
     while (1)
     {
-        // theaterChaseRainbow(5);
         rainbow(5);
-        // vTaskDelay(1000);
     }
 }
 
-void Task_motor(void *pvParameters)
+// ===========================
+// Task: Motor driver
+// ===========================
+void Task_motor(void* pvParameters)
 {
     vTaskDelay(1000);
-    // motor.drive(-200);
-    // pinMode(MOTOR_PWM, OUTPUT);
-    // ledcSetup(1, 1000, 8);
-    // ledcAttachPin(MOTOR_PWM, 1);
-    // vTaskDelay(10);
-    // ledcWrite(1, 125);
-
     while (1)
     {
         vTaskDelay(20);
     }
 }
 
-void Task_update(void *pvParameters)
+// ===========================
+// Task: Periodic HAL update
+// ===========================
+void Task_update(void* pvParameters)
 {
     while (1)
     {
-
         HAL::Update();
         vTaskDelay(20);
     }
 }
 
-void Controller_start(void *pvParameters)
-{
-    Controller_init();
-    while (1)
-    {
-        Controller_loop();
+// ===========================
+// Task: Gamepad controller
+// ===========================
+// void Controller_start(void* pvParameters)
+// {
+//     Controller_init();
+//     while (1)
+//     {
+//         Controller_loop();
+//         vTaskDelay(100);
+//     }
+// }
 
-        vTaskDelay(100);
-    }
-}
-
-// Arduino setup function. Runs in CPU 1
+// ===========================
+// Arduino setup
+// ===========================
 void setup()
 {
     HAL::Init();
+
     xTaskCreatePinnedToCore(
         Task_start, "start_task", 4096, NULL, 2, &Task_start_Handle, ESP32_RUNNING_CORE);
+
     xTaskCreatePinnedToCore(
         Task_ws2812, "Task_ws2812", 2048, NULL, 4, &Task_ws2812_Handle, ESP32_RUNNING_CORE);
+
     xTaskCreatePinnedToCore(
         Task_key, "Task_key", 2048, NULL, 4, &Task_key_Handle, ESP32_RUNNING_CORE);
-    // xTaskCreatePinnedToCore(
-    //     Task_motor, "Task_motor", 1024, NULL, 4, &Task_motor_Handle, ESP32_RUNNING_CORE);
-    // xTaskCreatePinnedToCore(
-    //     Task_update, "Task_update", 1024, NULL, 4, &Task_update_Handle, ESP32_RUNNING_CORE);
+
     xTaskCreatePinnedToCore(
         Task_oled, "Task_oled", 1024 * 10, NULL, 4, &Task_oled_Handle, ESP32_RUNNING_CORE);
 
-    xTaskCreatePinnedToCore(
-        Controller_start, "Controller_start", 1024 * 10, NULL, 2, &Task_controller_Handle, 1);
+    // xTaskCreatePinnedToCore(
+    //     Controller_start, "Controller_start", 1024 * 10, NULL, 2, &Task_controller_Handle, 1);
 }
 
+// ===========================
+// Arduino main loop
+// ===========================
 void loop()
 {
-
     vTaskDelay(1000);
 }
+

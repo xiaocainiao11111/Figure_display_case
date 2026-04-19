@@ -1,0 +1,1182 @@
+/**
+ * @file   OledUI.cpp
+ * @author LZY (original author: RQNG, WouoUI)
+ * @brief  OLED UI layer implementation
+ *
+ * All UI logic: state machines, animations, per-page show/proc functions,
+ * button scanning, fade/tile/list/window effects.
+ */
+
+#include "OledUI.h"
+#include "main.h"
+
+// ===========================
+// External references
+// ===========================
+// u8g2     - declared in OledDriver.h, defined in OledDriver.cpp
+// key_en   - declared in HAL_Encoder.h, defined in HAL_Encoder.cpp
+// gamepad_axis - declared in main.h, defined in main.cpp
+// Menu data     - in OledMenus.cpp
+
+// (No local definitions here - all globals come from their respective headers)
+
+// Analog channel pins for voltage monitor
+const uint8_t analog_pin[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+// ===========================
+// Global UI contexts
+// ===========================
+UI_Context ui;
+Tile_Context tile;
+List_Context list;
+Volt_Context volt;
+CheckBox_Context check_box;
+Win_Context win;
+Knob_Context knob;
+volatile Button_Context btn;
+
+// ===========================
+// Macro helpers
+// ===========================
+#define UI_ANIM_SPEED(n) (ui.param[n] / 10.0f)
+
+// ===========================
+// ===========================
+// BUTTON / ENCODER SCANNING
+// ===========================
+// ===========================
+
+void OledUI::Key_Scan()
+{
+    // Encoder input via HAL_Encoder
+    int16_t enc_diff = ENCODER::Encoder_GetDiff();
+    if (enc_diff > 0)
+    {
+        btn.id = BTN_ID_CW;
+        btn.pressed = true;
+    }
+    else if (enc_diff < 0)
+    {
+        btn.id = BTN_ID_CC;
+        btn.pressed = true;
+    }
+
+    // Button press from main app (encoder button or external)
+    if (key_en)
+    {
+        key_en = false;
+        btn.id = BTN_ID_SP;
+        btn.pressed = true;
+    }
+
+    // Gamepad axis (for compatibility)
+    if (gamepad_axis == 1)
+    {
+        gamepad_axis = 0;
+        btn.id = BTN_ID_CW;
+        btn.pressed = true;
+    }
+    else if (gamepad_axis == 2)
+    {
+        gamepad_axis = 0;
+        btn.id = BTN_ID_CC;
+        btn.pressed = true;
+    }
+    else if (gamepad_axis == 3)
+    {
+        gamepad_axis = 0;
+        btn.id = BTN_ID_SP;
+        btn.pressed = true;
+    }
+}
+
+// ===========================
+// ===========================
+// UI PARAM & PAGE INIT
+// ===========================
+// ===========================
+
+void OledUI::UI_Param_Init()
+{
+    ui.param[DISP_BRI] = 255;
+    ui.param[TILE_ANI] = 30;
+    ui.param[LIST_ANI] = 60;
+    ui.param[WIN_ANI] = 25;
+    ui.param[SPOT_ANI] = 50;
+    ui.param[TAG_ANI] = 60;
+    ui.param[FADE_ANI] = 30;
+    ui.param[BTN_SPT] = 25;
+    ui.param[BTN_LPT] = 150;
+    ui.param[TILE_UFD] = 1;
+    ui.param[LIST_UFD] = 1;
+    ui.param[TILE_LOOP] = 0;
+    ui.param[LIST_LOOP] = 0;
+    ui.param[WIN_BOK] = 0;
+    ui.param[KNOB_DIR] = 0;
+    ui.param[DARK_MODE] = 1;
+}
+
+void OledUI::UI_Init()
+{
+    ui.num[M_MAIN]   = main_menu_count;
+    ui.num[M_EDITOR] = editor_menu_count;
+    ui.num[M_KNOB]   = knob_menu_count;
+    ui.num[M_KRF]    = krf_menu_count;
+    ui.num[M_KPF]    = kpf_menu_count;
+    ui.num[M_VOLT]   = volt_menu_count;
+    ui.num[M_SETTING]= setting_menu_count;
+    ui.num[M_ABOUT]  = about_menu_count;
+}
+
+// ---- Checkbox helpers ----
+
+void OledUI::CheckBox_Value_Init(uint8_t* param)
+{
+    check_box.v = param;
+}
+
+void OledUI::CheckBox_Multi_Init(uint8_t* param)
+{
+    check_box.m = param;
+}
+
+void OledUI::CheckBox_Single_Init(uint8_t* param, uint8_t* param_pos)
+{
+    check_box.s  = param;
+    check_box.s_p = param_pos;
+}
+
+void OledUI::CheckBox_M_Select(uint8_t idx)
+{
+    check_box.m[idx] = !check_box.m[idx];
+}
+
+void OledUI::CheckBox_S_Select(uint8_t val, uint8_t pos)
+{
+    *check_box.s  = val;
+    *check_box.s_p = pos;
+}
+
+// ---- Window helpers ----
+
+void OledUI::Window_Value_Init(
+    const char* title, uint8_t sel_param, uint8_t* value,
+    uint8_t max, uint8_t min, uint8_t step,
+    const M_SELECT* bg, uint8_t bg_index)
+{
+    strncpy(win.title, title, sizeof(win.title) - 1);
+    win.title[sizeof(win.title) - 1] = '\0';
+    win.select = sel_param;
+    win.value   = value;
+    win.max     = max;
+    win.min     = min;
+    win.step    = step;
+    win.bg      = bg;
+    win.bg_index = bg_index;
+    ui.index    = M_WINDOW;
+    ui.state    = S_WINDOW;
+}
+
+// ---- Page-specific param init ----
+
+void OledUI::Tile_Param_Init()
+{
+    ui.init = false;
+    tile.icon_x = 0;
+    tile.icon_x_trg = TILE_ICON_S;
+    tile.icon_y = -TILE_ICON_H;
+    tile.icon_y_trg = 0;
+    tile.indi_x = 0;
+    tile.indi_x_trg = TILE_INDI_W;
+    tile.title_y = tile.title_y_calc;
+    tile.title_y_trg = tile.title_y_trg_calc;
+}
+
+void OledUI::Sleep_Param_Init()
+{
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(0, 0, DISP_W, DISP_H);
+    u8g2.setPowerSave(1);
+    ui.state = S_NONE;
+    ui.sleep = true;
+}
+
+void OledUI::Knob_Param_Init()
+{
+    CheckBox_Value_Init(knob.param);
+}
+
+void OledUI::Krf_Param_Init()
+{
+    CheckBox_Single_Init(&knob.param[KNOB_ROT], &knob.param[KNOB_ROT_P]);
+}
+
+void OledUI::Kpf_Param_Init()
+{
+    CheckBox_Single_Init(&knob.param[KNOB_COD], &knob.param[KNOB_COD_P]);
+}
+
+void OledUI::Volt_Param_Init()
+{
+    volt.text_bg_r = 0;
+    volt.text_bg_r_trg = VOLT_TEXT_BG_W;
+}
+
+void OledUI::Setting_Param_Init()
+{
+    CheckBox_Value_Init(ui.param);
+    CheckBox_Multi_Init(ui.param);
+}
+
+// ---- Layer transition init ----
+
+void OledUI::Layer_Init_In()
+{
+    ui.layer++;
+    ui.init = false;
+    list.y = 0;
+    list.y_trg = LIST_LINE_H;
+    list.box_x = 0;
+    list.box_y = 0;
+    list.bar_y = 0;
+    ui.state = S_FADE;
+
+    switch (ui.index)
+    {
+    case M_MAIN:   Tile_Param_Init(); break;
+    case M_KNOB:   Knob_Param_Init(); break;
+    case M_KRF:    Krf_Param_Init();  break;
+    case M_KPF:    Kpf_Param_Init();  break;
+    case M_VOLT:   Volt_Param_Init(); break;
+    case M_SETTING:Setting_Param_Init(); break;
+    }
+}
+
+void OledUI::Layer_Init_Out()
+{
+    ui.select[ui.layer] = 0;
+    list.box_y_trg[ui.layer] = 0;
+    ui.layer--;
+    ui.init = false;
+    list.y = 0;
+    list.y_trg = LIST_LINE_H;
+    list.bar_y = 0;
+    ui.state = S_FADE;
+
+    switch (ui.index)
+    {
+    case M_SLEEP: Sleep_Param_Init(); break;
+    case M_MAIN:  Tile_Param_Init();  break;
+    }
+}
+
+void OledUI::Window_Param_Init()
+{
+    win.bar = 0;
+    win.y = WIN_Y;
+    win.y_trg = win.u;
+    ui.state = S_NONE;
+}
+
+// ===========================
+// ===========================
+// ANIMATION
+// ===========================
+// ===========================
+
+void OledUI::Animation(float* a, float* a_trg, uint8_t n)
+{
+    if (*a != *a_trg)
+    {
+        if (fabs(*a - *a_trg) < 0.15f)
+            *a = *a_trg;
+        else
+            *a += (*a_trg - *a) / UI_ANIM_SPEED(n);
+    }
+}
+
+void OledUI::Fade()
+{
+    uint8_t* buf = OledDriver::GetBufferPtr();
+    uint16_t len  = OledDriver::GetBufferLen();
+
+    delay(ui.param[FADE_ANI]);
+
+    if (ui.param[DARK_MODE]) // Dark mode
+    {
+        switch (ui.fade)
+        {
+        case 1:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 != 0) buf[i] = buf[i] & 0xAA;
+            break;
+        case 2:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 != 0) buf[i] = buf[i] & 0x00;
+            break;
+        case 3:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 == 0) buf[i] = buf[i] & 0x55;
+            break;
+        case 4:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 == 0) buf[i] = buf[i] & 0x00;
+            break;
+        default:
+            ui.state = S_NONE;
+            ui.fade = 0;
+            break;
+        }
+    }
+    else // Light mode
+    {
+        switch (ui.fade)
+        {
+        case 1:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 != 0) buf[i] = buf[i] | 0xAA;
+            break;
+        case 2:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 != 0) buf[i] = buf[i] | 0x00;
+            break;
+        case 3:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 == 0) buf[i] = buf[i] | 0x55;
+            break;
+        case 4:
+            for (uint16_t i = 0; i < len; ++i)
+                if (i % 2 == 0) buf[i] = buf[i] | 0x00;
+            break;
+        default:
+            ui.state = S_NONE;
+            ui.fade = 0;
+            break;
+        }
+    }
+    ui.fade++;
+}
+
+// ===========================
+// ===========================
+// SHOW / RENDER FUNCTIONS
+// ===========================
+// ===========================
+
+// ---- Tile show (icon + title) ----
+
+void OledUI::Tile_Show(const M_SELECT arr[], const uint8_t icon_pic[][120])
+{
+    Animation(&tile.icon_x,  &tile.icon_x_trg,  TILE_ANI);
+    Animation(&tile.icon_y,  &tile.icon_y_trg,  TILE_ANI);
+    Animation(&tile.indi_x,  &tile.indi_x_trg,  TILE_ANI);
+    Animation(&tile.title_y, &tile.title_y_trg, TILE_ANI);
+
+    u8g2.setDrawColor(1);
+
+    // Draw title
+    u8g2.setFont(TILE_B_FONT);
+    u8g2.drawStr(
+        ((DISP_W - TILE_INDI_W) - u8g2.getStrWidth(arr[ui.select[ui.layer]].m_select)) / 2 + TILE_INDI_W,
+        tile.title_y,
+        arr[ui.select[ui.layer]].m_select);
+
+    // Draw indicator bar
+    u8g2.drawBox(0, TILE_ICON_S, tile.indi_x, TILE_INDI_H);
+
+    // Draw icons
+    if (!ui.init)
+    {
+        for (uint8_t i = 0; i < ui.num[ui.index]; ++i)
+        {
+            if (ui.param[TILE_UFD])
+                tile.temp = (DISP_W - TILE_ICON_W) / 2 + i * tile.icon_x - TILE_ICON_S * ui.select[ui.layer];
+            else
+                tile.temp = (DISP_W - TILE_ICON_W) / 2 + (i - ui.select[ui.layer]) * tile.icon_x;
+
+            u8g2.drawXBMP(tile.temp, (int16_t)tile.icon_y, TILE_ICON_W, TILE_ICON_H, icon_pic[i]);
+        }
+        if (tile.icon_x == tile.icon_x_trg)
+        {
+            ui.init = true;
+            tile.icon_x = tile.icon_x_trg = -ui.select[ui.layer] * TILE_ICON_S;
+        }
+    }
+    else
+    {
+        for (uint8_t i = 0; i < ui.num[ui.index]; ++i)
+            u8g2.drawXBMP(
+                (DISP_W - TILE_ICON_W) / 2 + (int16_t)tile.icon_x + i * TILE_ICON_S,
+                0, TILE_ICON_W, TILE_ICON_H, icon_pic[i]);
+    }
+
+    // Invert for dark mode mask
+    u8g2.setDrawColor(2);
+    if (!ui.param[DARK_MODE])
+        u8g2.drawBox(0, 0, DISP_W, DISP_H);
+}
+
+// ---- List tail rendering helpers ----
+
+static void List_Draw_Value(int n)
+{
+    u8g2.print(check_box.v[n - 1]);
+}
+
+static void List_Draw_CheckBox_Frame()
+{
+    u8g2.drawRFrame(CHECK_BOX_L_S, list.temp + CHECK_BOX_U_S, CHECK_BOX_F_W, CHECK_BOX_F_H, 1);
+}
+
+static void List_Draw_CheckBox_Dot()
+{
+    u8g2.drawBox(
+        CHECK_BOX_L_S + CHECK_BOX_D_S + 1,
+        list.temp + CHECK_BOX_U_S + CHECK_BOX_D_S + 1,
+        CHECK_BOX_F_W - (CHECK_BOX_D_S + 1) * 2,
+        CHECK_BOX_F_H - (CHECK_BOX_D_S + 1) * 2);
+}
+
+static void List_Draw_Krf(int n)
+{
+    switch (check_box.v[n - 1])
+    {
+    case 0: u8g2.print("OFF"); break;
+    case 1: u8g2.print("VOL"); break;
+    case 2: u8g2.print("BRI"); break;
+    }
+}
+
+static void List_Draw_Kpf(int n)
+{
+    if (check_box.v[n - 1] == 0)
+        u8g2.print("OFF");
+    else if (check_box.v[n - 1] <= 90)
+        u8g2.print((char)check_box.v[n - 1]);
+    else
+        u8g2.print("?");
+}
+
+static void List_Draw_Text_And_CheckBox(const M_SELECT arr[], int i)
+{
+    u8g2.drawStr(LIST_TEXT_S, list.temp + LIST_TEXT_H + LIST_TEXT_S, arr[i].m_select);
+    u8g2.setCursor(CHECK_BOX_L_S, list.temp + LIST_TEXT_H + LIST_TEXT_S);
+
+    switch (arr[i].m_select[0])
+    {
+    case '~':
+        List_Draw_Value(i);
+        break;
+    case '+':
+        List_Draw_CheckBox_Frame();
+        if (check_box.m[i - 1] == 1)
+            List_Draw_CheckBox_Dot();
+        break;
+    case '=':
+        List_Draw_CheckBox_Frame();
+        if (*check_box.s_p == i)
+            List_Draw_CheckBox_Dot();
+        break;
+    case '#':
+        List_Draw_Krf(i);
+        break;
+    case '$':
+        List_Draw_Kpf(i);
+        break;
+    }
+}
+
+// ---- List show ----
+
+void OledUI::List_Show(const M_SELECT arr[], uint8_t ui_index)
+{
+    u8g2.setFont(LIST_FONT);
+
+    list.box_x_trg = u8g2.getStrWidth(arr[ui.select[ui.layer]].m_select) + LIST_TEXT_S * 2;
+    list.bar_y_trg = ceil((ui.select[ui.layer]) * ((float)DISP_H / (ui.num[ui_index] - 1)));
+
+    Animation(&list.y,      &list.y_trg,      LIST_ANI);
+    Animation(&list.box_x,  &list.box_x_trg,  LIST_ANI);
+    Animation(&list.box_y,  &list.box_y_trg[ui.layer], LIST_ANI);
+    Animation(&list.bar_y,  &list.bar_y_trg,  LIST_ANI);
+
+    if (list.loop && list.box_y == list.box_y_trg[ui.layer])
+        list.loop = false;
+
+    u8g2.setDrawColor(1);
+
+    // Progress bar
+    u8g2.drawHLine(DISP_W - LIST_BAR_W, 0, LIST_BAR_W);
+    u8g2.drawHLine(DISP_W - LIST_BAR_W, DISP_H - 1, LIST_BAR_W);
+    u8g2.drawVLine(DISP_W - ceil((float)LIST_BAR_W / 2), 0, DISP_H);
+    u8g2.drawBox(DISP_W - LIST_BAR_W, 0, LIST_BAR_W, list.bar_y);
+
+    // List text
+    if (!ui.init)
+    {
+        for (int i = 0; i < ui.num[ui_index]; ++i)
+        {
+            if (ui.param[LIST_UFD])
+                list.temp = i * list.y - LIST_LINE_H * ui.select[ui.layer] + list.box_y_trg[ui.layer];
+            else
+                list.temp = (i - ui.select[ui.layer]) * list.y + list.box_y_trg[ui.layer];
+
+            List_Draw_Text_And_CheckBox(arr, i);
+        }
+        if (list.y == list.y_trg)
+        {
+            ui.init = true;
+            list.y = list.y_trg = -LIST_LINE_H * ui.select[ui.layer] + list.box_y_trg[ui.layer];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < ui.num[ui_index]; ++i)
+        {
+            list.temp = LIST_LINE_H * i + list.y;
+            List_Draw_Text_And_CheckBox(arr, i);
+        }
+    }
+
+    // Selection box
+    u8g2.setDrawColor(2);
+    u8g2.drawRBox(0, list.box_y, list.box_x, LIST_LINE_H, LIST_BOX_R);
+
+    // Dark mode mask
+    if (!ui.param[DARK_MODE])
+    {
+        u8g2.drawBox(0, 0, DISP_W, DISP_H);
+        if (ui.index == M_WINDOW || ui.index == M_VOLT)
+            u8g2.drawBox(0, 0, DISP_W, DISP_H);
+    }
+}
+
+// ---- Volt show ----
+
+void OledUI::Volt_Show()
+{
+    List_Show(volt_menu, M_VOLT);
+
+    Animation(&volt.text_bg_r, &volt.text_bg_r_trg, TAG_ANI);
+
+    u8g2.setDrawColor(1);
+
+    // Waveform frame
+    u8g2.drawFrame(WAVE_BOX_L_S, 0, WAVE_BOX_W, WAVE_BOX_H);
+    u8g2.drawFrame(WAVE_BOX_L_S + 1, 1, WAVE_BOX_W - 2, WAVE_BOX_H - 2);
+
+    if (list.box_y == list.box_y_trg[ui.layer] && list.y == list.y_trg)
+    {
+        for (int i = 0; i < WAVE_SAMPLE * WAVE_W; i++)
+            // volt.ch0_adc[i] = volt.val = analogRead(analog_pin[ui.select[ui.layer]]);
+            volt.ch0_adc[i] = volt.val = random(500, 1023);
+
+        for (int i = 1; i < WAVE_W - 1; i++)
+        {
+            volt.ch0_wave[i] = map(volt.ch0_adc[int(5 * i)], 0, 4095, WAVE_MAX, WAVE_MIN);
+            u8g2.drawLine(WAVE_L + i - 1, WAVE_U + volt.ch0_wave[i - 1],
+                          WAVE_L + i,       WAVE_U + volt.ch0_wave[i]);
+        }
+    }
+
+    // Voltage value
+    u8g2.setFontDirection(0);
+    u8g2.setFont(VOLT_FONT);
+    u8g2.setCursor(39, DISP_H - 6);
+    u8g2.print(volt.val / 4096.0f * 3.3f);
+    u8g2.print("V");
+
+    // Text background + dark mode
+    u8g2.setDrawColor(2);
+    u8g2.drawBox(VOLT_TEXT_BG_L_S, DISP_H - VOLT_TEXT_BG_H, volt.text_bg_r, VOLT_TEXT_BG_H);
+
+    if (!ui.param[DARK_MODE])
+        u8g2.drawBox(0, 0, DISP_W, DISP_H);
+}
+
+// ---- Window show ----
+
+void OledUI::Window_Show()
+{
+    List_Show(win.bg, win.bg_index);
+
+    if (ui.param[WIN_BOK])
+    {
+        uint8_t* buf = OledDriver::GetBufferPtr();
+        uint16_t len  = OledDriver::GetBufferLen();
+        for (uint16_t i = 0; i < len; ++i)
+            buf[i] = buf[i] & (i % 2 == 0 ? 0x55 : 0xAA);
+    }
+
+    u8g2.setFont(WIN_FONT);
+    win.bar_trg = (float)(*win.value - win.min) / (float)(win.max - win.min) * (WIN_BAR_W - 4);
+
+    Animation(&win.bar, &win.bar_trg, WIN_ANI);
+    Animation(&win.y,   &win.y_trg,   WIN_ANI);
+
+    win.l = (DISP_W - WIN_W) / 2;
+    win.u = (DISP_H - WIN_H) / 2;
+
+    u8g2.setDrawColor(0);
+    u8g2.drawRBox(win.l, (int16_t)win.y, WIN_W, WIN_H, 2);
+    u8g2.setDrawColor(1);
+    u8g2.drawRFrame(win.l, (int16_t)win.y, WIN_W, WIN_H, 2);
+    u8g2.drawRFrame(win.l + 5, (int16_t)win.y + 20, WIN_BAR_W, WIN_BAR_H, 1);
+    u8g2.drawBox(win.l + 7, (int16_t)win.y + 22, win.bar, WIN_BAR_H - 4);
+    u8g2.setCursor(win.l + 5, (int16_t)win.y + 14);
+    u8g2.print(win.title);
+    u8g2.setCursor(win.l + 78, (int16_t)win.y + 14);
+    u8g2.print(*win.value);
+
+    // Apply brightness immediately on "Disp Bri"
+    if (!strcmp(win.title, "Disp Bri"))
+        u8g2.setContrast(ui.param[DISP_BRI]);
+
+    u8g2.setDrawColor(2);
+    if (!ui.param[DARK_MODE])
+        u8g2.drawBox(0, 0, DISP_W, DISP_H);
+}
+
+// ===========================
+// ===========================
+// PAGE PROCESS FUNCTIONS
+// ===========================
+// ===========================
+
+// ---- Tile rotate helper ----
+
+static void Tile_Rotate_Switch()
+{
+    switch (btn.id)
+    {
+    case BTN_ID_CC:
+        if (ui.init)
+        {
+            if (ui.select[ui.layer] > 0)
+            {
+                ui.select[ui.layer]--;
+                tile.icon_x_trg += TILE_ICON_S;
+                tile.select_flag = false;
+            }
+            else
+            {
+                if (ui.param[TILE_LOOP])
+                {
+                    ui.select[ui.layer] = ui.num[ui.index] - 1;
+                    tile.icon_x_trg = -TILE_ICON_S * (ui.num[ui.index] - 1);
+                }
+                else
+                    tile.select_flag = true;
+            }
+        }
+        break;
+
+    case BTN_ID_CW:
+        if (ui.init)
+        {
+            if (ui.select[ui.layer] < (ui.num[ui.index] - 1))
+            {
+                ui.select[ui.layer]++;
+                tile.icon_x_trg -= TILE_ICON_S;
+                tile.select_flag = false;
+            }
+            else
+            {
+                if (ui.param[TILE_LOOP])
+                {
+                    ui.select[ui.layer] = 0;
+                    tile.icon_x_trg = 0;
+                }
+                else
+                    tile.select_flag = true;
+            }
+        }
+        break;
+    }
+}
+
+// ---- List rotate helper ----
+
+static void List_Rotate_Switch()
+{
+    if (!list.loop)
+    {
+        switch (btn.id)
+        {
+        case BTN_ID_CC:
+            if (ui.select[ui.layer] == 0)
+            {
+                if (ui.param[LIST_LOOP] && ui.init)
+                {
+                    list.loop = true;
+                    ui.select[ui.layer] = ui.num[ui.index] - 1;
+                    if (ui.num[ui.index] > list.line_n)
+                    {
+                        list.box_y_trg[ui.layer] = DISP_H - LIST_LINE_H;
+                        list.y_trg = DISP_H - ui.num[ui.index] * LIST_LINE_H;
+                    }
+                    else
+                        list.box_y_trg[ui.layer] = (ui.num[ui.index] - 1) * LIST_LINE_H;
+                }
+                break;
+            }
+            if (ui.init)
+            {
+                ui.select[ui.layer]--;
+                if (ui.select[ui.layer] < -(list.y_trg / LIST_LINE_H))
+                {
+                    if (!(DISP_H % LIST_LINE_H))
+                        list.y_trg += LIST_LINE_H;
+                    else
+                    {
+                        if (list.box_y_trg[ui.layer] == DISP_H - LIST_LINE_H * list.line_n)
+                        {
+                            list.y_trg += (list.line_n + 1) * LIST_LINE_H - DISP_H;
+                            list.box_y_trg[ui.layer] = 0;
+                        }
+                        else if (list.box_y_trg[ui.layer] == LIST_LINE_H)
+                            list.box_y_trg[ui.layer] = 0;
+                        else
+                            list.y_trg += LIST_LINE_H;
+                    }
+                }
+                else
+                    list.box_y_trg[ui.layer] -= LIST_LINE_H;
+            }
+            break;
+
+        case BTN_ID_CW:
+            if (ui.select[ui.layer] == (ui.num[ui.index] - 1))
+            {
+                if (ui.param[LIST_LOOP] && ui.init)
+                {
+                    list.loop = true;
+                    ui.select[ui.layer] = 0;
+                    list.y_trg = 0;
+                    list.box_y_trg[ui.layer] = 0;
+                }
+                break;
+            }
+            if (ui.init)
+            {
+                ui.select[ui.layer]++;
+                if ((ui.select[ui.layer] + 1) > (list.line_n - list.y_trg / LIST_LINE_H))
+                {
+                    if (!(DISP_H % LIST_LINE_H))
+                        list.y_trg -= LIST_LINE_H;
+                    else
+                    {
+                        if (list.box_y_trg[ui.layer] == LIST_LINE_H * (list.line_n - 1))
+                        {
+                            list.y_trg -= (list.line_n + 1) * LIST_LINE_H - DISP_H;
+                            list.box_y_trg[ui.layer] = DISP_H - LIST_LINE_H;
+                        }
+                        else if (list.box_y_trg[ui.layer] == DISP_H - LIST_LINE_H * 2)
+                            list.box_y_trg[ui.layer] = DISP_H - LIST_LINE_H;
+                        else
+                            list.y_trg -= LIST_LINE_H;
+                    }
+                }
+                else
+                    list.box_y_trg[ui.layer] += LIST_LINE_H;
+            }
+            break;
+        }
+    }
+}
+
+// ---- Window process ----
+
+void OledUI::Window_Proc()
+{
+    Window_Show();
+
+    if (win.y == WIN_Y_TRG)
+        ui.index = win.bg_index;
+
+    if (btn.pressed && win.y == win.y_trg && win.y != WIN_Y_TRG)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+            if (*win.value < win.max) *win.value += win.step;
+            break;
+        case BTN_ID_CC:
+            if (*win.value > win.min) *win.value -= win.step;
+            break;
+        case BTN_ID_SP:
+        case BTN_ID_LP:
+            win.y_trg = WIN_Y_TRG;
+            break;
+        }
+    }
+}
+
+// ---- Sleep process ----
+
+void OledUI::Sleep_Proc()
+{
+    while (ui.sleep)
+    {
+        // btn_scan(); // hardware knob scan (not used in this build)
+        if (btn.pressed)
+        {
+            btn.pressed = false;
+            switch (btn.id)
+            {
+            // Long press: wake up
+            // case BTN_ID_LP:
+            //     ui.index = M_MAIN;
+            //     ui.state = S_LAYER_IN;
+            //     u8g2.setPowerSave(0);
+            //     ui.sleep = false;
+            //     break;
+            }
+        }
+    }
+}
+
+// ---- Main menu process ----
+
+void OledUI::Main_Proc()
+{
+    Tile_Show(main_menu, main_icon_pic);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            Tile_Rotate_Switch();
+            break;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0: ui.index = M_SLEEP;  ui.state = S_LAYER_OUT; break;
+            case 1: ui.index = M_EDITOR; ui.state = S_LAYER_IN;  break;
+            case 2: ui.index = M_VOLT;   ui.state = S_LAYER_IN;  break;
+            case 3: ui.index = M_SETTING;ui.state = S_LAYER_IN;  break;
+            }
+            break;
+        }
+        if (!tile.select_flag && ui.init)
+        {
+            tile.indi_x = 0;
+            tile.title_y = tile.title_y_calc;
+        }
+    }
+}
+
+// ---- Editor process ----
+
+void OledUI::Editor_Proc()
+{
+    List_Show(editor_menu, M_EDITOR);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0:  ui.index = M_MAIN;  ui.state = S_LAYER_OUT; break;
+            case 11: ui.index = M_KNOB;  ui.state = S_LAYER_IN;  break;
+            }
+            break;
+        }
+    }
+}
+
+// ---- Knob process ----
+
+void OledUI::Knob_Proc()
+{
+    List_Show(knob_menu, M_KNOB);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0: ui.index = M_EDITOR; ui.state = S_LAYER_OUT; break;
+            case 1:
+                ui.index = M_KRF;
+                ui.state = S_LAYER_IN;
+                CheckBox_Single_Init(&knob.param[KNOB_ROT], &knob.param[KNOB_ROT_P]);
+                break;
+            case 2:
+                ui.index = M_KPF;
+                ui.state = S_LAYER_IN;
+                CheckBox_Single_Init(&knob.param[KNOB_COD], &knob.param[KNOB_COD_P]);
+                break;
+            }
+            break;
+        }
+    }
+}
+
+// ---- KRF process ----
+
+void OledUI::Krf_Proc()
+{
+    List_Show(krf_menu, M_KRF);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0: ui.index = M_KNOB; ui.state = S_LAYER_OUT; break;
+            case 2: CheckBox_S_Select(KNOB_DISABLE, ui.select[ui.layer]); break;
+            case 4: CheckBox_S_Select(KNOB_ROT_VOL, ui.select[ui.layer]); break;
+            case 5: CheckBox_S_Select(KNOB_ROT_BRI, ui.select[ui.layer]); break;
+            }
+            break;
+        }
+    }
+}
+
+// ---- KPF process ----
+
+void OledUI::Kpf_Proc()
+{
+    List_Show(kpf_menu, M_KPF);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            // Key mapping disabled in this build (stub only)
+            if (ui.select[ui.layer] == 0)
+            {
+                ui.index = M_KNOB;
+                ui.state = S_LAYER_OUT;
+            }
+            break;
+        }
+    }
+}
+
+// ---- Volt process ----
+
+void OledUI::Volt_Proc()
+{
+    Volt_Show();
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_SP:
+        case BTN_ID_LP:
+            ui.index = M_MAIN;
+            ui.state = S_LAYER_OUT;
+            break;
+        }
+    }
+}
+
+// ---- Setting process ----
+
+void OledUI::Setting_Proc()
+{
+    List_Show(setting_menu, M_SETTING);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0:
+                ui.index = M_MAIN;
+                ui.state = S_LAYER_OUT;
+                break;
+            case 1: Window_Value_Init("Disp Bri", DISP_BRI, &ui.param[DISP_BRI], 255, 0, 5, setting_menu, M_SETTING); break;
+            case 2: Window_Value_Init("Tile Ani", TILE_ANI, &ui.param[TILE_ANI], 100, 10, 1, setting_menu, M_SETTING); break;
+            case 3: Window_Value_Init("List Ani", LIST_ANI, &ui.param[LIST_ANI], 100, 10, 1, setting_menu, M_SETTING); break;
+            case 4: Window_Value_Init("Win Ani",  WIN_ANI,  &ui.param[WIN_ANI],  100, 10, 1, setting_menu, M_SETTING); break;
+            case 5: Window_Value_Init("Spot Ani", SPOT_ANI, &ui.param[SPOT_ANI], 100, 10, 1, setting_menu, M_SETTING); break;
+            case 6: Window_Value_Init("Tag Ani",  TAG_ANI,  &ui.param[TAG_ANI],  100, 10, 1, setting_menu, M_SETTING); break;
+            case 7: Window_Value_Init("Fade Ani", FADE_ANI, &ui.param[FADE_ANI], 255, 0, 1, setting_menu, M_SETTING); break;
+            case 8: Window_Value_Init("Btn SPT",  BTN_SPT,  &ui.param[BTN_SPT],  255, 0, 1, setting_menu, M_SETTING); break;
+            case 9: Window_Value_Init("Btn LPT",  BTN_LPT,  &ui.param[BTN_LPT],  255, 0, 1, setting_menu, M_SETTING); break;
+            case 10: CheckBox_M_Select(TILE_UFD);  break;
+            case 11: CheckBox_M_Select(LIST_UFD);  break;
+            case 12: CheckBox_M_Select(TILE_LOOP); break;
+            case 13: CheckBox_M_Select(LIST_LOOP); break;
+            case 14: CheckBox_M_Select(WIN_BOK);   break;
+            case 15: CheckBox_M_Select(KNOB_DIR);  break;
+            case 16: CheckBox_M_Select(DARK_MODE); break;
+            case 17:
+                ui.index = M_ABOUT;
+                ui.state = S_LAYER_IN;
+                break;
+            }
+            break;
+        }
+    }
+}
+
+// ---- About process ----
+
+void OledUI::About_Proc()
+{
+    List_Show(about_menu, M_ABOUT);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            if (ui.select[ui.layer] == 0)
+            {
+                ui.index = M_SETTING;
+                ui.state = S_LAYER_OUT;
+            }
+            break;
+        }
+    }
+}
+
+// ===========================
+// ===========================
+// MAIN UI TASK
+// ===========================
+// ===========================
+
+// Forward declaration (ui_proc defined below)
+static void ui_proc();
+
+void OledUI::Task()
+{
+    Key_Scan();
+    ui_proc();
+}
+
+// Master UI dispatcher
+static void ui_proc()
+{
+    OledDriver::SendBuffer();
+
+    switch (ui.state)
+    {
+    case S_FADE:
+        OledUI::Fade();
+        break;
+    case S_WINDOW:
+        OledUI::Window_Param_Init();
+        break;
+    case S_LAYER_IN:
+        OledUI::Layer_Init_In();
+        break;
+    case S_LAYER_OUT:
+        OledUI::Layer_Init_Out();
+        break;
+    case S_NONE:
+        OledDriver::ClearBuffer();
+        switch (ui.index)
+        {
+        case M_WINDOW:  OledUI::Window_Proc();  break;
+        case M_SLEEP:   OledUI::Sleep_Proc();   break;
+        case M_MAIN:    OledUI::Main_Proc();    break;
+        case M_EDITOR:  OledUI::Editor_Proc();  break;
+        case M_KNOB:    OledUI::Knob_Proc();    break;
+        case M_KRF:     OledUI::Krf_Proc();     break;
+        case M_KPF:     OledUI::Kpf_Proc();     break;
+        case M_VOLT:    OledUI::Volt_Proc();    break;
+        case M_SETTING: OledUI::Setting_Proc(); break;
+        case M_ABOUT:   OledUI::About_Proc();   break;
+        }
+        break;
+    }
+}
+
+// ===========================
+// Top-level init
+// ===========================
+
+void OledUI::Init()
+{
+    // Init tile context computed values
+    tile.title_y_calc = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H * 2;
+    tile.title_y_trg_calc = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H;
+
+    // Init list context
+    list.line_n = DISP_H / LIST_LINE_H;
+
+    // Init knob defaults
+    knob.param[KNOB_ROT]  = KNOB_DISABLE;
+    knob.param[KNOB_COD]  = KNOB_DISABLE;
+    knob.param[KNOB_ROT_P] = 2;
+    knob.param[KNOB_COD_P] = 2;
+
+    // UI subsystem
+    UI_Param_Init();
+    UI_Init();
+
+    // Hardware
+    OledDriver::Init();
+    OledDriver::SetContrast(ui.param[DISP_BRI]);
+
+    // Boot to main menu
+    ui.index = M_MAIN;
+    ui.state = S_NONE;
+}

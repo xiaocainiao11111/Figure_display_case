@@ -41,7 +41,8 @@ static void Encoder_IrqHandler()
     }
 }
 
-bool key_en =0;
+// Encoder button pressed flag
+bool key_en = false;
 
 // 按键回调
 static void Encoder_PushHandler(ButtonEvent *btn, int event)
