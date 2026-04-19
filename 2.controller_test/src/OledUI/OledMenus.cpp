@@ -199,3 +199,53 @@ PROGMEM const uint8_t main_icon_pic[][120] = {
     },
 };
 const uint8_t main_icon_count = sizeof(main_icon_pic) / 120;
+
+// ===========================
+// Light 灯带菜单
+// ===========================
+
+// 灯带主菜单
+const M_SELECT light_main_menu[] = {
+    {"[ Light ]"},    // 0
+    {"~ Brightness"},  // 1 -> M_LIGHT_BRI (亮度滑动条)
+    {"~ Color"},        // 2 -> M_LIGHT_COLOR (颜色)
+    {"= Effect"},      // 3 -> M_LIGHT_EFFECT (效果选择)
+};
+const uint8_t light_main_menu_count = sizeof(light_main_menu) / sizeof(M_SELECT);
+
+// 亮度调节菜单
+extern uint8_t light_brightness;  // ← 由用户实现: 全局亮度值 (0-255)
+const M_SELECT light_bri_menu[] = {
+    {"[ Brightness ]"},
+    {"~ Bri:"},         // ~ 前缀 -> 弹出滑动条弹窗
+};
+const uint8_t light_bri_menu_count = sizeof(light_bri_menu) / sizeof(M_SELECT);
+
+// 颜色选择菜单 (预留RGB独立滑条，或预定义色板)
+extern uint8_t light_color_r;  // ← 由用户实现
+extern uint8_t light_color_g;  // ← 由用户实现
+extern uint8_t light_color_b;  // ← 由用户实现
+const M_SELECT light_color_menu[] = {
+    {"[ Color ]"},
+    {"= Red"},           // 0
+    {"= Green"},         // 1
+    {"= Blue"},          // 2
+    {"= White"},         // 3
+    {"= Custom"},        // 4  预留: RGB滑条或取色器
+};
+const uint8_t light_color_menu_count = sizeof(light_color_menu) / sizeof(M_SELECT);
+
+// 预定义效果菜单 (预留，用户实现效果函数)
+// light_effect_id: 0=Static 1=Breath 2=Rainbow 3=Wave 4=Strobe 5=Comet 6=Sparkle
+extern const char* light_effect_name[];  // 效果名称数组指针，由用户实现
+const M_SELECT light_effect_menu[] = {
+    {"[ Effect ]"},
+    {"= Static"},        // 0  静态单色
+    {"= Breath"},        // 1  呼吸效果
+    {"= Rainbow"},       // 2  彩虹流水
+    {"= Wave"},          // 3  波浪效果
+    {"= Strobe"},        // 4  频闪效果
+    {"= Comet"},         // 5  彗星拖尾
+    {"= Sparkle"},        // 6  闪烁星点
+};
+const uint8_t light_effect_menu_count = sizeof(light_effect_menu) / sizeof(M_SELECT);

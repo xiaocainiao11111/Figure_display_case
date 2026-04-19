@@ -36,6 +36,25 @@ Knob_Context knob;
 volatile Button_Context btn;
 
 // ===========================
+// Light 灯带全局变量 (用户实现这些变量)
+// ===========================
+uint8_t light_brightness = 128;  // 亮度 0-255，待用户实现具体控制逻辑
+uint8_t light_color_r = 255;       // RGB颜色，待用户实现
+uint8_t light_color_g = 255;
+uint8_t light_color_b = 255;
+uint8_t light_effect_id = 0;       // 当前效果ID 0-6，待用户实现效果函数
+// 效果名称表 (供显示使用)
+const char* light_effect_name[] = {
+    "Static",   // 0
+    "Breath",   // 1
+    "Rainbow",  // 2
+    "Wave",     // 3
+    "Strobe",   // 4
+    "Comet",    // 5
+    "Sparkle",  // 6
+};
+
+// ===========================
 // Macro helpers
 // ===========================
 #define UI_ANIM_SPEED(n) (ui.param[n] / 10.0f)
@@ -126,6 +145,11 @@ void OledUI::UI_Init()
     ui.num[M_VOLT]   = volt_menu_count;
     ui.num[M_SETTING]= setting_menu_count;
     ui.num[M_ABOUT]  = about_menu_count;
+    // Light 灯带
+    ui.num[M_LIGHT_MAIN] = light_main_menu_count;
+    ui.num[M_LIGHT_BRI]  = light_bri_menu_count;
+    ui.num[M_LIGHT_COLOR] = light_color_menu_count;
+    ui.num[M_LIGHT_EFFECT]= light_effect_menu_count;
 }
 
 // ---- Checkbox helpers ----
@@ -188,8 +212,9 @@ void OledUI::Tile_Param_Init()
     tile.icon_y_trg = 0;
     tile.indi_x = 0;
     tile.indi_x_trg = TILE_INDI_W;
-    tile.title_y = tile.title_y_calc;
-    tile.title_y_trg = tile.title_y_trg_calc;
+    // Compute targets directly here (compile-time constants, no init-order dependency)
+    tile.title_y = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H * 2;   // start position
+    tile.title_y_trg = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H; // target position
 }
 
 void OledUI::Sleep_Param_Init()
@@ -230,6 +255,12 @@ void OledUI::Setting_Param_Init()
 
 // ---- Layer transition init ----
 
+// Forward declarations for Light 灯带页面
+static void Light_Main_Param_Init();
+static void Light_Bri_Param_Init();
+static void Light_Color_Param_Init();
+static void Light_Effect_Param_Init();
+
 void OledUI::Layer_Init_In()
 {
     ui.layer++;
@@ -249,6 +280,11 @@ void OledUI::Layer_Init_In()
     case M_KPF:    Kpf_Param_Init();  break;
     case M_VOLT:   Volt_Param_Init(); break;
     case M_SETTING:Setting_Param_Init(); break;
+    // Light 灯带
+    case M_LIGHT_MAIN: Light_Main_Param_Init(); break;
+    case M_LIGHT_BRI:   Light_Bri_Param_Init();  break;
+    case M_LIGHT_COLOR: Light_Color_Param_Init(); break;
+    case M_LIGHT_EFFECT:Light_Effect_Param_Init(); break;
     }
 }
 
@@ -855,7 +891,7 @@ void OledUI::Main_Proc()
         case BTN_ID_SP:
             switch (ui.select[ui.layer])
             {
-            case 0: ui.index = M_SLEEP;  ui.state = S_LAYER_OUT; break;
+            case 0: ui.index = M_LIGHT_MAIN; ui.state = S_LAYER_IN;  break;
             case 1: ui.index = M_EDITOR; ui.state = S_LAYER_IN;  break;
             case 2: ui.index = M_VOLT;   ui.state = S_LAYER_IN;  break;
             case 3: ui.index = M_SETTING;ui.state = S_LAYER_IN;  break;
@@ -1144,6 +1180,11 @@ static void ui_proc()
         case M_VOLT:    OledUI::Volt_Proc();    break;
         case M_SETTING: OledUI::Setting_Proc(); break;
         case M_ABOUT:   OledUI::About_Proc();   break;
+        // Light 灯带
+        case M_LIGHT_MAIN:  OledUI::Light_Main_Proc();   break;
+        case M_LIGHT_BRI:   OledUI::Light_Bri_Proc();    break;
+        case M_LIGHT_COLOR: OledUI::Light_Color_Proc();  break;
+        case M_LIGHT_EFFECT:OledUI::Light_Effect_Proc(); break;
         }
         break;
     }
@@ -1155,10 +1196,6 @@ static void ui_proc()
 
 void OledUI::Init()
 {
-    // Init tile context computed values
-    tile.title_y_calc = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H * 2;
-    tile.title_y_trg_calc = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H;
-
     // Init list context
     list.line_n = DISP_H / LIST_LINE_H;
 
@@ -1179,4 +1216,240 @@ void OledUI::Init()
     // Boot to main menu
     ui.index = M_MAIN;
     ui.state = S_NONE;
+}
+
+// ===========================
+// ===========================
+// LIGHT 灯带页面实现
+// ===========================
+// ===========================
+
+// ---- Light 主菜单 参数初始化 ----
+
+// light_main_select: 追踪主菜单 ~ 项的值（亮度/颜色/效果的当前选择）
+static uint8_t light_main_select = 0;
+
+// light_bri_values: ~ 前缀 List_Draw_Value 需要数组（v[0]=亮度）
+static uint8_t light_bri_values[1] = {128};
+
+static void Light_Main_Param_Init()
+{
+    // ~ 前缀项使用 check_box.v (Value 模式)
+    // = 前缀项使用 check_box.s_p (Single radio 模式)
+    OledUI::CheckBox_Single_Init(&light_main_select, &light_main_select);
+}
+
+static void Light_Bri_Param_Init()
+{
+    OledUI::CheckBox_Value_Init(light_bri_values);
+}
+
+// light_color_select: 追踪当前选中的颜色项 (0-4)
+static uint8_t light_color_select = 0;
+
+static void Light_Color_Param_Init()
+{
+    OledUI::CheckBox_Single_Init(&light_color_select, &light_color_select);
+}
+
+static void Light_Effect_Param_Init()
+{
+    OledUI::CheckBox_Single_Init(&light_effect_id, &light_effect_id);
+}
+
+// ---- Light 主菜单显示 ----
+
+void OledUI::Light_Main_Show()
+{
+    List_Show(light_main_menu, M_LIGHT_MAIN);
+}
+
+// ---- Light 主菜单处理 ----
+
+void OledUI::Light_Main_Proc()
+{
+    Light_Main_Show();
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0:  // Return
+                ui.index = M_MAIN;
+                ui.state = S_LAYER_OUT;
+                break;
+            case 1:  // Brightness -> 亮度调节
+                ui.index = M_LIGHT_BRI;
+                ui.state = S_LAYER_IN;
+                break;
+            case 2:  // Color -> 颜色选择
+                ui.index = M_LIGHT_COLOR;
+                ui.state = S_LAYER_IN;
+                break;
+            case 3:  // Effect -> 效果选择
+                ui.index = M_LIGHT_EFFECT;
+                ui.state = S_LAYER_IN;
+                break;
+            // ========== 用户实现区 ==========
+            // case 1: Window_Value_Init("Bright", ..., &light_brightness, 255, 0, 5, light_main_menu, M_LIGHT_MAIN);
+            //     break;
+            // case 2: ui.index = M_LIGHT_COLOR; ui.state = S_LAYER_IN; break;
+            // case 3: ui.index = M_LIGHT_EFFECT; ui.state = S_LAYER_IN; break;
+            // ==================================
+            }
+            break;
+        }
+    }
+}
+
+// ---- Light 亮度调节 显示 ----
+
+void OledUI::Light_Bri_Show()
+{
+    List_Show(light_bri_menu, M_LIGHT_BRI);
+}
+
+// ---- Light 亮度调节 处理 ----
+// 用户需实现: 将 light_brightness 应用到灯带硬件
+void OledUI::Light_Bri_Proc()
+{
+    Light_Bri_Show();
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            // ========== 用户实现区 ==========
+            // 例: 旋转调整 light_brightness
+            // if (btn.id == BTN_ID_CW && light_brightness < 255) light_brightness++;
+            // if (btn.id == BTN_ID_CC && light_brightness > 0) light_brightness--;
+            // ApplyToStrip();
+            // ==================================
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0:  // Return
+                ui.index = M_LIGHT_MAIN;
+                ui.state = S_LAYER_OUT;
+                break;
+            case 1:  // 亮度滑动条弹窗
+                // ========== 用户实现区 ==========
+                // Window_Value_Init("Bright", ..., &light_brightness, 255, 0, 5, light_bri_menu, M_LIGHT_BRI);
+                // ==================================
+                break;
+            }
+            break;
+        }
+    }
+}
+
+// ---- Light 颜色选择 显示 ----
+
+void OledUI::Light_Color_Show()
+{
+    List_Show(light_color_menu, M_LIGHT_COLOR);
+}
+
+// ---- Light 颜色选择 处理 ----
+// 用户需实现: 将 light_color_r/g/b 应用到灯带硬件
+void OledUI::Light_Color_Proc()
+{
+    Light_Color_Show();
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0:  // Return
+                ui.index = M_LIGHT_MAIN;
+                ui.state = S_LAYER_OUT;
+                break;
+            // ========== 用户实现区 ==========
+            // case 1: light_color_r=255; light_color_g=0;   light_color_b=0;   ApplyColor(); break;  // Red
+            // case 2: light_color_r=0;   light_color_g=255; light_color_b=0;   ApplyColor(); break;  // Green
+            // case 3: light_color_r=0;   light_color_g=0;   light_color_b=255; ApplyColor(); break;  // Blue
+            // case 4: light_color_r=255; light_color_g=255; light_color_b=255; ApplyColor(); break;  // White
+            // case 5: ui.index = M_LIGHT_COLOR_custom; ui.state = S_LAYER_IN; break; // Custom RGB 预留
+            // ==================================
+            }
+            break;
+        }
+    }
+}
+
+// ---- Light 效果选择 显示 ----
+
+void OledUI::Light_Effect_Show()
+{
+    List_Show(light_effect_menu, M_LIGHT_EFFECT);
+}
+
+// ---- Light 效果选择 处理 ----
+// 用户需实现: 根据 light_effect_id 执行对应效果函数
+void OledUI::Light_Effect_Proc()
+{
+    Light_Effect_Show();
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            // ========== 用户实现区 ==========
+            // 例: 旋转时预览效果名称
+            // EffectPreview(light_effect_id);
+            // ==================================
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            switch (ui.select[ui.layer])
+            {
+            case 0:  // Return
+                ui.index = M_LIGHT_MAIN;
+                ui.state = S_LAYER_OUT;
+                break;
+            // ========== 用户实现区 ==========
+            // case 1: light_effect_id = 0; StopEffect(); StaticColor(light_color_r, light_color_g, light_color_b); break;  // Static
+            // case 2: light_effect_id = 1; StopEffect(); StartEffect(Breath, light_color_r, light_color_g, light_color_b); break;  // Breath
+            // case 3: light_effect_id = 2; StopEffect(); StartEffect(Rainbow, ...); break;  // Rainbow
+            // case 4: light_effect_id = 3; StopEffect(); StartEffect(Wave, ...); break;   // Wave
+            // case 5: light_effect_id = 4; StopEffect(); StartEffect(Strobe, ...); break;  // Strobe
+            // case 6: light_effect_id = 5; StopEffect(); StartEffect(Comet, ...); break;  // Comet
+            // case 7: light_effect_id = 6; StopEffect(); StartEffect(Sparkle, ...); break; // Sparkle
+            // ==================================
+            }
+            break;
+        }
+    }
 }

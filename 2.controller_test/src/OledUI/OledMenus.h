@@ -56,6 +56,23 @@ extern const uint8_t setting_menu_count;
 extern const M_SELECT about_menu[];
 extern const uint8_t about_menu_count;
 
+// ---- Light 灯带 ----
+// 灯带主菜单
+extern const M_SELECT light_main_menu[];
+extern const uint8_t light_main_menu_count;
+
+// 亮度调节菜单
+extern const M_SELECT light_bri_menu[];
+extern const uint8_t light_bri_menu_count;
+
+// 颜色选择菜单
+extern const M_SELECT light_color_menu[];
+extern const uint8_t light_color_menu_count;
+
+// 预定义效果菜单
+extern const M_SELECT light_effect_menu[];
+extern const uint8_t light_effect_menu_count;
+
 // ===========================
 // Icon bitmap data (PROGMEM)
 // ===========================

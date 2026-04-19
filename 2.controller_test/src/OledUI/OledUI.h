@@ -27,8 +27,13 @@ enum UI_PAGE
     M_KRF,      // Knob rotate function select
     M_KPF,      // Knob press function select
     M_VOLT,     // Voltage monitor (waveform + list)
-    M_SETTING,  // Settings (checkboxes + sliders)
-    M_ABOUT,    // About page
+    M_SETTING,     // Settings (checkboxes + sliders)
+    M_ABOUT,       // About page
+    // ---- Light (灯带) ----
+    M_LIGHT_MAIN,  // 灯带主菜单
+    M_LIGHT_BRI,    // 亮度调节
+    M_LIGHT_COLOR,  // 颜色选择
+    M_LIGHT_EFFECT, // 预定义效果
 };
 
 // ===========================
@@ -159,8 +164,8 @@ typedef struct
 // ===========================
 typedef struct
 {
-    float title_y_calc;
-    float title_y_trg_calc;
+    float title_y_calc     = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H * 2;
+    float title_y_trg_calc  = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H;
     int16_t temp;
     bool select_flag;
     float icon_x;
@@ -352,6 +357,16 @@ namespace OledUI
     void Setting_Proc();
     void About_Proc();
     void Window_Proc();
+
+    // ---- Light 灯带 ----
+    void Light_Main_Show();
+    void Light_Main_Proc();
+    void Light_Bri_Show();
+    void Light_Bri_Proc();
+    void Light_Color_Show();
+    void Light_Color_Proc();
+    void Light_Effect_Show();
+    void Light_Effect_Proc();
 }
 
 #endif // __OLED_UI_H
