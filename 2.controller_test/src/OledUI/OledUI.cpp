@@ -456,6 +456,11 @@ void OledUI::Tile_Show(const M_SELECT arr[], const uint8_t icon_pic[][120])
 
 static void List_Draw_Value(int n)
 {
+    if (check_box.v == nullptr)
+    {
+        u8g2.print("--");
+        return;
+    }
     u8g2.print(check_box.v[n - 1]);
 }
 
@@ -505,12 +510,12 @@ static void List_Draw_Text_And_CheckBox(const M_SELECT arr[], int i)
         break;
     case '+':
         List_Draw_CheckBox_Frame();
-        if (check_box.m[i - 1] == 1)
+        if (check_box.m != nullptr && check_box.m[i - 1] == 1)
             List_Draw_CheckBox_Dot();
         break;
     case '=':
         List_Draw_CheckBox_Frame();
-        if (*check_box.s_p == i)
+        if (check_box.s_p != nullptr && *check_box.s_p == i)
             List_Draw_CheckBox_Dot();
         break;
     case '#':
@@ -853,24 +858,20 @@ void OledUI::Window_Proc()
 
 void OledUI::Sleep_Proc()
 {
-    while (ui.sleep)
-    {
-        // btn_scan(); // hardware knob scan (not used in this build)
-        if (btn.pressed)
-        {
-            btn.pressed = false;
-            switch (btn.id)
-            {
-            // Long press: wake up
-            // case BTN_ID_LP:
-            //     ui.index = M_MAIN;
-            //     ui.state = S_LAYER_IN;
-            //     u8g2.setPowerSave(0);
-            //     ui.sleep = false;
-            //     break;
-            }
-        }
-    }
+    if (!ui.sleep || !btn.pressed)
+        return;
+
+    // Wake on the next available input event. Keep this handler non-blocking so
+    // Key_Scan() continues to run on every UI task iteration.
+    btn.pressed = false;
+    ui.sleep = false;
+    u8g2.setPowerSave(0);
+
+    ui.layer = 0;
+    ui.select[0] = 0;
+    ui.index = M_MAIN;
+    Tile_Param_Init();
+    ui.state = S_NONE;
 }
 
 // ---- Main menu process ----
@@ -1226,22 +1227,15 @@ void OledUI::Init()
 
 // ---- Light 主菜单 参数初始化 ----
 
-// light_main_select: 追踪主菜单 ~ 项的值（亮度/颜色/效果的当前选择）
-static uint8_t light_main_select = 0;
-
-// light_bri_values: ~ 前缀 List_Draw_Value 需要数组（v[0]=亮度）
-static uint8_t light_bri_values[1] = {128};
-
 static void Light_Main_Param_Init()
 {
-    // ~ 前缀项使用 check_box.v (Value 模式)
-    // = 前缀项使用 check_box.s_p (Single radio 模式)
-    OledUI::CheckBox_Single_Init(&light_main_select, &light_main_select);
+    // The submenu entries are display-only until LED hardware control is
+    // connected. They intentionally use the plain '-' menu type.
 }
 
 static void Light_Bri_Param_Init()
 {
-    OledUI::CheckBox_Value_Init(light_bri_values);
+    OledUI::CheckBox_Value_Init(&light_brightness);
 }
 
 // light_color_select: 追踪当前选中的颜色项 (0-4)
@@ -1288,24 +1282,11 @@ void OledUI::Light_Main_Proc()
                 ui.index = M_MAIN;
                 ui.state = S_LAYER_OUT;
                 break;
-            case 1:  // Brightness -> 亮度调节
-                ui.index = M_LIGHT_BRI;
-                ui.state = S_LAYER_IN;
+            case 1: // Brightness (WIP)
+            case 2: // Color (WIP)
+            case 3: // Effect (WIP)
+                // Deliberately disabled until these pages update the LED task.
                 break;
-            case 2:  // Color -> 颜色选择
-                ui.index = M_LIGHT_COLOR;
-                ui.state = S_LAYER_IN;
-                break;
-            case 3:  // Effect -> 效果选择
-                ui.index = M_LIGHT_EFFECT;
-                ui.state = S_LAYER_IN;
-                break;
-            // ========== 用户实现区 ==========
-            // case 1: Window_Value_Init("Bright", ..., &light_brightness, 255, 0, 5, light_main_menu, M_LIGHT_MAIN);
-            //     break;
-            // case 2: ui.index = M_LIGHT_COLOR; ui.state = S_LAYER_IN; break;
-            // case 3: ui.index = M_LIGHT_EFFECT; ui.state = S_LAYER_IN; break;
-            // ==================================
             }
             break;
         }
