@@ -206,10 +206,10 @@ const uint8_t main_icon_count = sizeof(main_icon_pic) / 120;
 
 // 灯带主菜单
 const M_SELECT light_main_menu[] = {
-    {"[ Light ]"},    // 0
-    {"~ Brightness"},  // 1 -> M_LIGHT_BRI (亮度滑动条)
-    {"~ Color"},        // 2 -> M_LIGHT_COLOR (颜色)
-    {"= Effect"},      // 3 -> M_LIGHT_EFFECT (效果选择)
+    {"[ Light - WIP ]"}, // 0
+    {"- Brightness"},    // 1 (入口将在硬件控制接通后启用)
+    {"- Color"},         // 2 (入口将在硬件控制接通后启用)
+    {"- Effect"},        // 3 (入口将在硬件控制接通后启用)
 };
 const uint8_t light_main_menu_count = sizeof(light_main_menu) / sizeof(M_SELECT);
 
