@@ -62,11 +62,6 @@ const char* light_effect_name[] = {
 };
 
 // ===========================
-// Macro helpers
-// ===========================
-#define UI_ANIM_SPEED(n) (ui.param[n] / 10.0f)
-
-// ===========================
 // ===========================
 // BUTTON / ENCODER SCANNING
 // ===========================
@@ -248,6 +243,10 @@ void OledUI::Tile_Param_Init()
         TILE_INDI_H,
         TILE_B_TITLE_H
     });
+    ResetAnimationTrack(tile.icon_x_track);
+    ResetAnimationTrack(tile.icon_y_track);
+    ResetAnimationTrack(tile.indi_x_track);
+    ResetAnimationTrack(tile.title_y_track);
 }
 
 void OledUI::Sleep_Param_Init()
@@ -278,6 +277,7 @@ void OledUI::Volt_Param_Init()
 {
     volt.text_bg_r = 0;
     volt.text_bg_r_trg = VOLT_TEXT_BG_W;
+    ResetAnimationTrack(volt.text_bg_r_track);
 }
 
 void OledUI::Setting_Param_Init()
@@ -338,6 +338,10 @@ void OledUI::Layer_Init_In()
     list.box_x = 0;
     list.box_y = 0;
     list.bar_y = 0;
+    ResetAnimationTrack(list.y_track);
+    ResetAnimationTrack(list.box_x_track);
+    ResetAnimationTrack(list.box_y_track);
+    ResetAnimationTrack(list.bar_y_track);
     UiNavigation::CompleteEnter(ui, Page_Param_Init);
 }
 
@@ -348,6 +352,10 @@ void OledUI::Layer_Init_Out()
     list.y = 0;
     list.y_trg = LIST_LINE_H;
     list.bar_y = 0;
+    ResetAnimationTrack(list.y_track);
+    ResetAnimationTrack(list.box_x_track);
+    ResetAnimationTrack(list.box_y_track);
+    ResetAnimationTrack(list.bar_y_track);
     UiNavigation::CompleteBack(ui, Page_Param_Init);
 }
 
@@ -356,6 +364,8 @@ void OledUI::Window_Param_Init()
     win.bar = 0;
     win.y = WIN_Y;
     win.y_trg = win.u;
+    ResetAnimationTrack(win.bar_track);
+    ResetAnimationTrack(win.y_track);
     ui.state = S_NONE;
 }
 
@@ -365,15 +375,19 @@ void OledUI::Window_Param_Init()
 // ===========================
 // ===========================
 
-void OledUI::Animation(float* a, float* a_trg, uint8_t n)
+void OledUI::Animation(
+    AnimationTrack& track,
+    float& value,
+    float target,
+    uint8_t speed_param)
 {
-    if (*a != *a_trg)
-    {
-        if (fabs(*a - *a_trg) < 0.15f)
-            *a = *a_trg;
-        else
-            *a += (*a_trg - *a) / UI_ANIM_SPEED(n);
-    }
+    UpdateAnimation(
+        track,
+        value,
+        target,
+        AnimationDurationMs(ui.param[speed_param]),
+        AnimationCurve::OutCubic,
+        millis());
 }
 
 void OledUI::Fade()
@@ -448,10 +462,10 @@ void OledUI::Fade()
 
 void OledUI::Tile_Show(const M_SELECT arr[], const uint8_t icon_pic[][120])
 {
-    Animation(&tile.icon_x,  &tile.icon_x_trg,  TILE_ANI);
-    Animation(&tile.icon_y,  &tile.icon_y_trg,  TILE_ANI);
-    Animation(&tile.indi_x,  &tile.indi_x_trg,  TILE_ANI);
-    Animation(&tile.title_y, &tile.title_y_trg, TILE_ANI);
+    Animation(tile.icon_x_track,  tile.icon_x,  tile.icon_x_trg,  TILE_ANI);
+    Animation(tile.icon_y_track,  tile.icon_y,  tile.icon_y_trg,  TILE_ANI);
+    Animation(tile.indi_x_track,  tile.indi_x,  tile.indi_x_trg,  TILE_ANI);
+    Animation(tile.title_y_track, tile.title_y, tile.title_y_trg, TILE_ANI);
 
     u8g2.setDrawColor(1);
 
@@ -585,10 +599,10 @@ void OledUI::List_Show(const M_SELECT arr[], uint8_t ui_index)
     list.box_x_trg = u8g2.getStrWidth(arr[ui.select[ui.layer]].m_select) + LIST_TEXT_S * 2;
     list.bar_y_trg = ceil((ui.select[ui.layer]) * ((float)DISP_H / (ui.num[ui_index] - 1)));
 
-    Animation(&list.y,      &list.y_trg,      LIST_ANI);
-    Animation(&list.box_x,  &list.box_x_trg,  LIST_ANI);
-    Animation(&list.box_y,  &list.box_y_trg[ui.layer], LIST_ANI);
-    Animation(&list.bar_y,  &list.bar_y_trg,  LIST_ANI);
+    Animation(list.y_track,     list.y,     list.y_trg,                 LIST_ANI);
+    Animation(list.box_x_track, list.box_x, list.box_x_trg,             LIST_ANI);
+    Animation(list.box_y_track, list.box_y, list.box_y_trg[ui.layer],   LIST_ANI);
+    Animation(list.bar_y_track, list.bar_y, list.bar_y_trg,             LIST_ANI);
 
     if (list.loop && list.box_y == list.box_y_trg[ui.layer])
         list.loop = false;
@@ -647,7 +661,7 @@ void OledUI::Volt_Show()
 {
     List_Show(volt_menu, M_VOLT);
 
-    Animation(&volt.text_bg_r, &volt.text_bg_r_trg, TAG_ANI);
+    Animation(volt.text_bg_r_track, volt.text_bg_r, volt.text_bg_r_trg, TAG_ANI);
 
     u8g2.setDrawColor(1);
 
@@ -701,8 +715,8 @@ void OledUI::Window_Show()
     u8g2.setFont(WIN_FONT);
     win.bar_trg = (float)(*win.value - win.min) / (float)(win.max - win.min) * (WIN_BAR_W - 4);
 
-    Animation(&win.bar, &win.bar_trg, WIN_ANI);
-    Animation(&win.y,   &win.y_trg,   WIN_ANI);
+    Animation(win.bar_track, win.bar, win.bar_trg, WIN_ANI);
+    Animation(win.y_track,   win.y,   win.y_trg,   WIN_ANI);
 
     win.l = (DISP_W - WIN_W) / 2;
     win.u = (DISP_H - WIN_H) / 2;

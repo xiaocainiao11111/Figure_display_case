@@ -11,6 +11,7 @@
 #define __OLED_UI_H
 
 #include <Arduino.h>
+#include "AnimationCurve.h"
 #include "UiTypes.h"
 #include "OledDriver.h"
 #include "OledMenus.h"
@@ -136,12 +137,16 @@ typedef struct
     bool select_flag;
     float icon_x;
     float icon_x_trg;
+    AnimationTrack icon_x_track;
     float icon_y;
     float icon_y_trg;
+    AnimationTrack icon_y_track;
     float indi_x;
     float indi_x_trg;
+    AnimationTrack indi_x_track;
     float title_y;
     float title_y_trg;
+    AnimationTrack title_y_track;
 } Tile_Context;
 
 // ===========================
@@ -154,12 +159,16 @@ typedef struct
     bool loop;
     float y;
     float y_trg;
+    AnimationTrack y_track;
     float box_x;
     float box_x_trg;
+    AnimationTrack box_x_track;
     float box_y;
     float box_y_trg[UI_DEPTH];
+    AnimationTrack box_y_track;
     float bar_y;
     float bar_y_trg;
+    AnimationTrack bar_y_track;
 } List_Context;
 
 // ===========================
@@ -172,6 +181,7 @@ typedef struct
     int val;
     float text_bg_r;
     float text_bg_r_trg;
+    AnimationTrack text_bg_r_track;
 } Volt_Context;
 
 // ===========================
@@ -202,8 +212,10 @@ typedef struct
     uint8_t u;
     float bar;
     float bar_trg;
+    AnimationTrack bar_track;
     float y;
     float y_trg;
+    AnimationTrack y_track;
 } Win_Context;
 
 // ===========================
@@ -298,7 +310,7 @@ namespace OledUI
         const M_SELECT* bg, uint8_t bg_index);
 
     // ---- Animation functions ----
-    void Animation(float* a, float* a_trg, uint8_t n);
+    void Animation(AnimationTrack& track, float& value, float target, uint8_t speed_param);
     void Fade();
 
     // ---- Layer transition init ----
