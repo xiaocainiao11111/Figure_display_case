@@ -8,7 +8,13 @@
  */
 
 #include "OledUI.h"
+#include "MainPageState.h"
+#include "Input/SerialDebugInput.h"
 #include "main.h"
+
+#ifndef ENABLE_SERIAL_INPUT_DEBUG
+#define ENABLE_SERIAL_INPUT_DEBUG 0
+#endif
 
 // ===========================
 // External references
@@ -107,6 +113,34 @@ void OledUI::Key_Scan()
         btn.id = BTN_ID_SP;
         btn.pressed = true;
     }
+
+#if ENABLE_SERIAL_INPUT_DEBUG
+    // Hardware inputs keep priority. Ignore line endings and consume at most
+    // one valid debug command per UI task iteration.
+    while (!btn.pressed && Serial.available() > 0)
+    {
+        const SerialDebugInput::Command command =
+            SerialDebugInput::Decode(static_cast<char>(Serial.read()));
+
+        switch (command)
+        {
+        case SerialDebugInput::Command::RotateLeft:
+            btn.id = BTN_ID_CC;
+            btn.pressed = true;
+            break;
+        case SerialDebugInput::Command::RotateRight:
+            btn.id = BTN_ID_CW;
+            btn.pressed = true;
+            break;
+        case SerialDebugInput::Command::Press:
+            btn.id = BTN_ID_SP;
+            btn.pressed = true;
+            break;
+        case SerialDebugInput::Command::None:
+            break;
+        }
+    }
+#endif
 }
 
 // ===========================
@@ -205,16 +239,14 @@ void OledUI::Window_Value_Init(
 
 void OledUI::Tile_Param_Init()
 {
-    ui.init = false;
-    tile.icon_x = 0;
-    tile.icon_x_trg = TILE_ICON_S;
-    tile.icon_y = -TILE_ICON_H;
-    tile.icon_y_trg = 0;
-    tile.indi_x = 0;
-    tile.indi_x_trg = TILE_INDI_W;
-    // Compute targets directly here (compile-time constants, no init-order dependency)
-    tile.title_y = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H * 2;   // start position
-    tile.title_y_trg = TILE_INDI_S + (TILE_INDI_H - TILE_B_TITLE_H) / 2 + TILE_B_TITLE_H; // target position
+    MainPageState::Initialize(ui, tile, {
+        TILE_ICON_S,
+        TILE_ICON_H,
+        TILE_INDI_W,
+        TILE_INDI_S,
+        TILE_INDI_H,
+        TILE_B_TITLE_H
+    });
 }
 
 void OledUI::Sleep_Param_Init()
@@ -1216,6 +1248,7 @@ void OledUI::Init()
 
     // Boot to main menu
     ui.index = M_MAIN;
+    Tile_Param_Init();
     ui.state = S_NONE;
 }
 
