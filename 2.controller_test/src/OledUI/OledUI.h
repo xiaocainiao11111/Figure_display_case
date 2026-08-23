@@ -302,6 +302,9 @@ namespace OledUI
     void Fade();
 
     // ---- Layer transition init ----
+    bool NavigateTo(UI_PAGE page);
+    bool Back();
+    void OpenRoot(UI_PAGE page);
     void Layer_Init_In();
     void Layer_Init_Out();
     void Window_Param_Init();

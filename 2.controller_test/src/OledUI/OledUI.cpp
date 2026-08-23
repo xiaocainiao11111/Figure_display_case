@@ -9,6 +9,7 @@
 
 #include "OledUI.h"
 #include "MainPageState.h"
+#include "UiNavigation.h"
 #include "Input/SerialDebugInput.h"
 #include "main.h"
 
@@ -293,49 +294,61 @@ static void Light_Bri_Param_Init();
 static void Light_Color_Param_Init();
 static void Light_Effect_Param_Init();
 
+static void Page_Param_Init(UI_PAGE page)
+{
+    ui.init = false;
+
+    switch (page)
+    {
+    case M_SLEEP:       OledUI::Sleep_Param_Init(); break;
+    case M_MAIN:        OledUI::Tile_Param_Init(); break;
+    case M_KNOB:        OledUI::Knob_Param_Init(); break;
+    case M_KRF:         OledUI::Krf_Param_Init(); break;
+    case M_KPF:         OledUI::Kpf_Param_Init(); break;
+    case M_VOLT:        OledUI::Volt_Param_Init(); break;
+    case M_SETTING:     OledUI::Setting_Param_Init(); break;
+    case M_LIGHT_MAIN:  Light_Main_Param_Init(); break;
+    case M_LIGHT_BRI:   Light_Bri_Param_Init(); break;
+    case M_LIGHT_COLOR: Light_Color_Param_Init(); break;
+    case M_LIGHT_EFFECT:Light_Effect_Param_Init(); break;
+    default: break;
+    }
+}
+
+bool OledUI::NavigateTo(UI_PAGE page)
+{
+    return UiNavigation::RequestEnter(ui, page) == UiNavigation::Result::Accepted;
+}
+
+bool OledUI::Back()
+{
+    return UiNavigation::RequestBack(ui) == UiNavigation::Result::Accepted;
+}
+
+void OledUI::OpenRoot(UI_PAGE page)
+{
+    UiNavigation::OpenRoot(ui, page, Page_Param_Init);
+}
+
 void OledUI::Layer_Init_In()
 {
-    ui.layer++;
     ui.init = false;
     list.y = 0;
     list.y_trg = LIST_LINE_H;
     list.box_x = 0;
     list.box_y = 0;
     list.bar_y = 0;
-    ui.state = S_FADE;
-
-    switch (ui.index)
-    {
-    case M_MAIN:   Tile_Param_Init(); break;
-    case M_KNOB:   Knob_Param_Init(); break;
-    case M_KRF:    Krf_Param_Init();  break;
-    case M_KPF:    Kpf_Param_Init();  break;
-    case M_VOLT:   Volt_Param_Init(); break;
-    case M_SETTING:Setting_Param_Init(); break;
-    // Light 灯带
-    case M_LIGHT_MAIN: Light_Main_Param_Init(); break;
-    case M_LIGHT_BRI:   Light_Bri_Param_Init();  break;
-    case M_LIGHT_COLOR: Light_Color_Param_Init(); break;
-    case M_LIGHT_EFFECT:Light_Effect_Param_Init(); break;
-    }
+    UiNavigation::CompleteEnter(ui, Page_Param_Init);
 }
 
 void OledUI::Layer_Init_Out()
 {
-    ui.select[ui.layer] = 0;
     list.box_y_trg[ui.layer] = 0;
-    ui.layer--;
     ui.init = false;
     list.y = 0;
     list.y_trg = LIST_LINE_H;
     list.bar_y = 0;
-    ui.state = S_FADE;
-
-    switch (ui.index)
-    {
-    case M_SLEEP: Sleep_Param_Init(); break;
-    case M_MAIN:  Tile_Param_Init();  break;
-    }
+    UiNavigation::CompleteBack(ui, Page_Param_Init);
 }
 
 void OledUI::Window_Param_Init()
@@ -899,11 +912,7 @@ void OledUI::Sleep_Proc()
     ui.sleep = false;
     u8g2.setPowerSave(0);
 
-    ui.layer = 0;
-    ui.select[0] = 0;
-    ui.index = M_MAIN;
-    Tile_Param_Init();
-    ui.state = S_NONE;
+    OpenRoot(M_MAIN);
 }
 
 // ---- Main menu process ----
@@ -924,10 +933,10 @@ void OledUI::Main_Proc()
         case BTN_ID_SP:
             switch (ui.select[ui.layer])
             {
-            case 0: ui.index = M_LIGHT_MAIN; ui.state = S_LAYER_IN;  break;
-            case 1: ui.index = M_EDITOR; ui.state = S_LAYER_IN;  break;
-            case 2: ui.index = M_VOLT;   ui.state = S_LAYER_IN;  break;
-            case 3: ui.index = M_SETTING;ui.state = S_LAYER_IN;  break;
+            case 0: NavigateTo(M_LIGHT_MAIN); break;
+            case 1: NavigateTo(M_EDITOR); break;
+            case 2: NavigateTo(M_VOLT); break;
+            case 3: NavigateTo(M_SETTING); break;
             }
             break;
         }
@@ -959,8 +968,8 @@ void OledUI::Editor_Proc()
         case BTN_ID_SP:
             switch (ui.select[ui.layer])
             {
-            case 0:  ui.index = M_MAIN;  ui.state = S_LAYER_OUT; break;
-            case 11: ui.index = M_KNOB;  ui.state = S_LAYER_IN;  break;
+            case 0:  Back(); break;
+            case 11: NavigateTo(M_KNOB); break;
             }
             break;
         }
@@ -987,16 +996,12 @@ void OledUI::Knob_Proc()
         case BTN_ID_SP:
             switch (ui.select[ui.layer])
             {
-            case 0: ui.index = M_EDITOR; ui.state = S_LAYER_OUT; break;
+            case 0: Back(); break;
             case 1:
-                ui.index = M_KRF;
-                ui.state = S_LAYER_IN;
-                CheckBox_Single_Init(&knob.param[KNOB_ROT], &knob.param[KNOB_ROT_P]);
+                NavigateTo(M_KRF);
                 break;
             case 2:
-                ui.index = M_KPF;
-                ui.state = S_LAYER_IN;
-                CheckBox_Single_Init(&knob.param[KNOB_COD], &knob.param[KNOB_COD_P]);
+                NavigateTo(M_KPF);
                 break;
             }
             break;
@@ -1024,7 +1029,7 @@ void OledUI::Krf_Proc()
         case BTN_ID_SP:
             switch (ui.select[ui.layer])
             {
-            case 0: ui.index = M_KNOB; ui.state = S_LAYER_OUT; break;
+            case 0: Back(); break;
             case 2: CheckBox_S_Select(KNOB_DISABLE, ui.select[ui.layer]); break;
             case 4: CheckBox_S_Select(KNOB_ROT_VOL, ui.select[ui.layer]); break;
             case 5: CheckBox_S_Select(KNOB_ROT_BRI, ui.select[ui.layer]); break;
@@ -1055,8 +1060,7 @@ void OledUI::Kpf_Proc()
             // Key mapping disabled in this build (stub only)
             if (ui.select[ui.layer] == 0)
             {
-                ui.index = M_KNOB;
-                ui.state = S_LAYER_OUT;
+                Back();
             }
             break;
         }
@@ -1080,8 +1084,7 @@ void OledUI::Volt_Proc()
             break;
         case BTN_ID_SP:
         case BTN_ID_LP:
-            ui.index = M_MAIN;
-            ui.state = S_LAYER_OUT;
+            Back();
             break;
         }
     }
@@ -1108,8 +1111,7 @@ void OledUI::Setting_Proc()
             switch (ui.select[ui.layer])
             {
             case 0:
-                ui.index = M_MAIN;
-                ui.state = S_LAYER_OUT;
+                Back();
                 break;
             case 1: Window_Value_Init("Disp Bri", DISP_BRI, &ui.param[DISP_BRI], 255, 0, 5, setting_menu, M_SETTING); break;
             case 2: Window_Value_Init("Tile Ani", TILE_ANI, &ui.param[TILE_ANI], 100, 10, 1, setting_menu, M_SETTING); break;
@@ -1128,8 +1130,7 @@ void OledUI::Setting_Proc()
             case 15: CheckBox_M_Select(KNOB_DIR);  break;
             case 16: CheckBox_M_Select(DARK_MODE); break;
             case 17:
-                ui.index = M_ABOUT;
-                ui.state = S_LAYER_IN;
+                NavigateTo(M_ABOUT);
                 break;
             }
             break;
@@ -1157,8 +1158,7 @@ void OledUI::About_Proc()
         case BTN_ID_SP:
             if (ui.select[ui.layer] == 0)
             {
-                ui.index = M_SETTING;
-                ui.state = S_LAYER_OUT;
+                Back();
             }
             break;
         }
@@ -1246,10 +1246,8 @@ void OledUI::Init()
     OledDriver::Init();
     OledDriver::SetContrast(ui.param[DISP_BRI]);
 
-    // Boot to main menu
-    ui.index = M_MAIN;
-    Tile_Param_Init();
-    ui.state = S_NONE;
+    // Boot to main menu through the same lifecycle used by wake-up.
+    OpenRoot(M_MAIN);
 }
 
 // ===========================
@@ -1312,8 +1310,7 @@ void OledUI::Light_Main_Proc()
             switch (ui.select[ui.layer])
             {
             case 0:  // Return
-                ui.index = M_MAIN;
-                ui.state = S_LAYER_OUT;
+                Back();
                 break;
             case 1: // Brightness (WIP)
             case 2: // Color (WIP)
@@ -1360,8 +1357,7 @@ void OledUI::Light_Bri_Proc()
             switch (ui.select[ui.layer])
             {
             case 0:  // Return
-                ui.index = M_LIGHT_MAIN;
-                ui.state = S_LAYER_OUT;
+                Back();
                 break;
             case 1:  // 亮度滑动条弹窗
                 // ========== 用户实现区 ==========
@@ -1402,15 +1398,14 @@ void OledUI::Light_Color_Proc()
             switch (ui.select[ui.layer])
             {
             case 0:  // Return
-                ui.index = M_LIGHT_MAIN;
-                ui.state = S_LAYER_OUT;
+                Back();
                 break;
             // ========== 用户实现区 ==========
             // case 1: light_color_r=255; light_color_g=0;   light_color_b=0;   ApplyColor(); break;  // Red
             // case 2: light_color_r=0;   light_color_g=255; light_color_b=0;   ApplyColor(); break;  // Green
             // case 3: light_color_r=0;   light_color_g=0;   light_color_b=255; ApplyColor(); break;  // Blue
             // case 4: light_color_r=255; light_color_g=255; light_color_b=255; ApplyColor(); break;  // White
-            // case 5: ui.index = M_LIGHT_COLOR_custom; ui.state = S_LAYER_IN; break; // Custom RGB 预留
+            // case 5: NavigateTo(M_LIGHT_COLOR_CUSTOM); break; // Custom RGB 预留
             // ==================================
             }
             break;
@@ -1450,8 +1445,7 @@ void OledUI::Light_Effect_Proc()
             switch (ui.select[ui.layer])
             {
             case 0:  // Return
-                ui.index = M_LIGHT_MAIN;
-                ui.state = S_LAYER_OUT;
+                Back();
                 break;
             // ========== 用户实现区 ==========
             // case 1: light_effect_id = 0; StopEffect(); StaticColor(light_color_r, light_color_g, light_color_b); break;  // Static

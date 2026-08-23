@@ -18,7 +18,7 @@ constexpr bool HasParent(UI_PAGE page)
     return page != M_WINDOW && page != M_SLEEP && page != M_MAIN;
 }
 
-constexpr UI_PAGE ParentOf(UI_PAGE page)
+inline UI_PAGE ParentOf(UI_PAGE page)
 {
     switch (page)
     {
