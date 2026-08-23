@@ -11,14 +11,7 @@
 #define __OLED_MENUS_H
 
 #include <Arduino.h>
-
-// ===========================
-// Menu item structure
-// ===========================
-typedef struct MENU
-{
-    const char* m_select;
-} M_SELECT;
+#include "MenuItem.h"
 
 // ===========================
 // Menu arrays (extern in .cpp)
