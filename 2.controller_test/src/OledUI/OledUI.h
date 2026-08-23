@@ -11,42 +11,9 @@
 #define __OLED_UI_H
 
 #include <Arduino.h>
+#include "UiTypes.h"
 #include "OledDriver.h"
 #include "OledMenus.h"
-
-// ===========================
-// Page / window index enum
-// ===========================
-enum UI_PAGE
-{
-    M_WINDOW,   // Popup window overlay
-    M_SLEEP,    // Sleep / idle screen
-    M_MAIN,     // Main menu (tile icons)
-    M_EDITOR,   // Editor list menu
-    M_KNOB,     // Knob config menu
-    M_KRF,      // Knob rotate function select
-    M_KPF,      // Knob press function select
-    M_VOLT,     // Voltage monitor (waveform + list)
-    M_SETTING,     // Settings (checkboxes + sliders)
-    M_ABOUT,       // About page
-    // ---- Light (灯带) ----
-    M_LIGHT_MAIN,  // 灯带主菜单
-    M_LIGHT_BRI,    // 亮度调节
-    M_LIGHT_COLOR,  // 颜色选择
-    M_LIGHT_EFFECT, // 预定义效果
-};
-
-// ===========================
-// UI state enum (transition labels)
-// ===========================
-enum UI_STATE
-{
-    S_FADE,      // Page transition animation
-    S_WINDOW,    // Window overlay init
-    S_LAYER_IN,  // Entering deeper layer
-    S_LAYER_OUT, // Returning to shallower layer
-    S_NONE,      // Normal rendering
-};
 
 // ===========================
 // UI param indices
@@ -87,7 +54,6 @@ enum { BTN_ID_CC = 0, BTN_ID_CW = 1, BTN_ID_SP = 2, BTN_ID_LP = 3 };
 // ===========================
 // UI dimensions
 // ===========================
-#define UI_DEPTH 20   // Max page layer depth
 #define UI_MNUMB 100  // Menu item count max
 #define BTN_PARAM_TIMES 2
 
