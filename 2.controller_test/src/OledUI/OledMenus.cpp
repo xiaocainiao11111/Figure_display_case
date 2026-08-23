@@ -125,9 +125,23 @@ const M_SELECT setting_menu[] = {
     {"+ Win Bokeh Bg", MenuItemType::Toggle, 13},
     {"+ Knob Rot Dir", MenuItemType::Toggle, 14},
     {"+ Dark Mode", MenuItemType::Toggle, 15},
+    {"- Anim Curve", MenuItemType::Action},
     {"- [ About ]", MenuItemType::Action},
 };
 const uint8_t setting_menu_count = sizeof(setting_menu) / sizeof(M_SELECT);
+
+// ===========================
+// Runtime animation curve menu (list)
+// ===========================
+const M_SELECT animation_curve_menu[] = {
+    {"[ Anim Curve ]", MenuItemType::Back},
+    {"= Linear", MenuItemType::Choice, 1},
+    {"= Out Cubic", MenuItemType::Choice, 2},
+    {"= InOut Cubic", MenuItemType::Choice, 3},
+    {"= Out Back", MenuItemType::Choice, 4},
+};
+const uint8_t animation_curve_menu_count =
+    sizeof(animation_curve_menu) / sizeof(M_SELECT);
 
 // ===========================
 // About menu (list)

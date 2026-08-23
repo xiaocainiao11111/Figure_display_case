@@ -32,6 +32,16 @@ int main()
     assert(NearlyEqual(EvaluateAnimationCurve(AnimationCurve::InOutCubic, 0.5f), 0.5f));
     assert(EvaluateAnimationCurve(AnimationCurve::OutBack, 0.8f) > 1.0f);
 
+    assert(AnimationCurveFromSelectionPosition(1) == AnimationCurve::Linear);
+    assert(AnimationCurveFromSelectionPosition(2) == AnimationCurve::OutCubic);
+    assert(AnimationCurveFromSelectionPosition(3) == AnimationCurve::InOutCubic);
+    assert(AnimationCurveFromSelectionPosition(4) == AnimationCurve::OutBack);
+    assert(AnimationCurveFromSelectionPosition(0) == AnimationCurve::OutCubic);
+    assert(AnimationCurveSelectionPosition(AnimationCurve::Linear) == 1);
+    assert(AnimationCurveSelectionPosition(AnimationCurve::OutCubic) == 2);
+    assert(AnimationCurveSelectionPosition(AnimationCurve::InOutCubic) == 3);
+    assert(AnimationCurveSelectionPosition(AnimationCurve::OutBack) == 4);
+
     assert(NearlyEqual(EvaluateAnimationCurve(AnimationCurve::Linear, -1.0f), 0.0f));
     assert(NearlyEqual(EvaluateAnimationCurve(AnimationCurve::Linear, 2.0f), 1.0f));
 

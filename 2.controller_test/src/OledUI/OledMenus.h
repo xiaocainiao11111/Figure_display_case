@@ -45,6 +45,10 @@ extern const uint8_t volt_menu_count;
 extern const M_SELECT setting_menu[];
 extern const uint8_t setting_menu_count;
 
+// Runtime animation curve selection - list
+extern const M_SELECT animation_curve_menu[];
+extern const uint8_t animation_curve_menu_count;
+
 // About - list
 extern const M_SELECT about_menu[];
 extern const uint8_t about_menu_count;

@@ -37,6 +37,8 @@ enum UI_PARAM
     WIN_BOK,    // Window background bokeh (blur) toggle
     KNOB_DIR,   // Knob rotation direction invert toggle
     DARK_MODE,  // Dark mode toggle
+    ANIM_CURVE, // Runtime AnimationCurve value
+    ANIM_CURVE_POS, // Selected row in the animation curve menu
     UI_PARAM_COUNT,
 };
 
@@ -295,6 +297,7 @@ namespace OledUI
     void Kpf_Param_Init();
     void Volt_Param_Init();
     void Setting_Param_Init();
+    void AnimationCurve_Param_Init();
 
     // ---- Checkbox helpers ----
     void CheckBox_Value_Init(uint8_t* param);
@@ -311,6 +314,8 @@ namespace OledUI
 
     // ---- Animation functions ----
     void Animation(AnimationTrack& track, float& value, float target, uint8_t speed_param);
+    void SetAnimationCurve(AnimationCurve curve);
+    AnimationCurve GetAnimationCurve();
     void Fade();
 
     // ---- Layer transition init ----
@@ -336,6 +341,7 @@ namespace OledUI
     void Kpf_Proc();
     void Volt_Proc();
     void Setting_Proc();
+    void AnimationCurve_Proc();
     void About_Proc();
     void Window_Proc();
 

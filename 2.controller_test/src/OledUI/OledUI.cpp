@@ -163,6 +163,7 @@ void OledUI::UI_Param_Init()
     ui.param[WIN_BOK] = 0;
     ui.param[KNOB_DIR] = 0;
     ui.param[DARK_MODE] = 1;
+    OledUI::SetAnimationCurve(AnimationCurve::OutCubic);
 }
 
 void OledUI::UI_Init()
@@ -174,6 +175,7 @@ void OledUI::UI_Init()
     ui.num[M_KPF]    = kpf_menu_count;
     ui.num[M_VOLT]   = volt_menu_count;
     ui.num[M_SETTING]= setting_menu_count;
+    ui.num[M_ANIM_CURVE] = animation_curve_menu_count;
     ui.num[M_ABOUT]  = about_menu_count;
     // Light 灯带
     ui.num[M_LIGHT_MAIN] = light_main_menu_count;
@@ -286,6 +288,11 @@ void OledUI::Setting_Param_Init()
     CheckBox_Multi_Init(ui.param);
 }
 
+void OledUI::AnimationCurve_Param_Init()
+{
+    CheckBox_Single_Init(&ui.param[ANIM_CURVE], &ui.param[ANIM_CURVE_POS]);
+}
+
 // ---- Layer transition init ----
 
 // Forward declarations for Light 灯带页面
@@ -307,6 +314,7 @@ static void Page_Param_Init(UI_PAGE page)
     case M_KPF:         OledUI::Kpf_Param_Init(); break;
     case M_VOLT:        OledUI::Volt_Param_Init(); break;
     case M_SETTING:     OledUI::Setting_Param_Init(); break;
+    case M_ANIM_CURVE:  OledUI::AnimationCurve_Param_Init(); break;
     case M_LIGHT_MAIN:  Light_Main_Param_Init(); break;
     case M_LIGHT_BRI:   Light_Bri_Param_Init(); break;
     case M_LIGHT_COLOR: Light_Color_Param_Init(); break;
@@ -386,8 +394,21 @@ void OledUI::Animation(
         value,
         target,
         AnimationDurationMs(ui.param[speed_param]),
-        AnimationCurve::OutCubic,
+        GetAnimationCurve(),
         millis());
+}
+
+void OledUI::SetAnimationCurve(AnimationCurve curve)
+{
+    const uint8_t position = AnimationCurveSelectionPosition(curve);
+    const AnimationCurve validated = AnimationCurveFromSelectionPosition(position);
+    ui.param[ANIM_CURVE] = static_cast<uint8_t>(validated);
+    ui.param[ANIM_CURVE_POS] = position;
+}
+
+AnimationCurve OledUI::GetAnimationCurve()
+{
+    return AnimationCurveFromValue(ui.param[ANIM_CURVE]);
 }
 
 void OledUI::Fade()
@@ -1148,9 +1169,40 @@ void OledUI::Setting_Proc()
             case 15: CheckBox_M_Select(KNOB_DIR);  break;
             case 16: CheckBox_M_Select(DARK_MODE); break;
             case 17:
+                NavigateTo(M_ANIM_CURVE);
+                break;
+            case 18:
                 NavigateTo(M_ABOUT);
                 break;
             }
+            break;
+        }
+    }
+}
+
+// ---- Runtime animation curve process ----
+
+void OledUI::AnimationCurve_Proc()
+{
+    List_Show(animation_curve_menu, M_ANIM_CURVE);
+
+    if (btn.pressed)
+    {
+        btn.pressed = false;
+        switch (btn.id)
+        {
+        case BTN_ID_CW:
+        case BTN_ID_CC:
+            List_Rotate_Switch();
+            break;
+        case BTN_ID_LP:
+            ui.select[ui.layer] = 0;
+        case BTN_ID_SP:
+            if (ui.select[ui.layer] == 0)
+                Back();
+            else
+                SetAnimationCurve(
+                    AnimationCurveFromSelectionPosition(ui.select[ui.layer]));
             break;
         }
     }
@@ -1230,6 +1282,7 @@ static void ui_proc()
         case M_KPF:     OledUI::Kpf_Proc();     break;
         case M_VOLT:    OledUI::Volt_Proc();    break;
         case M_SETTING: OledUI::Setting_Proc(); break;
+        case M_ANIM_CURVE: OledUI::AnimationCurve_Proc(); break;
         case M_ABOUT:   OledUI::About_Proc();   break;
         // Light 灯带
         case M_LIGHT_MAIN:  OledUI::Light_Main_Proc();   break;

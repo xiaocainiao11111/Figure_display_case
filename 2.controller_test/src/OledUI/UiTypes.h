@@ -16,6 +16,7 @@ enum UI_PAGE
     M_KPF,
     M_VOLT,
     M_SETTING,
+    M_ANIM_CURVE,
     M_ABOUT,
     M_LIGHT_MAIN,
     M_LIGHT_BRI,

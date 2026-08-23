@@ -37,6 +37,7 @@ int main()
     assert(UiNavigation::ParentOf(M_KPF) == M_KNOB);
     assert(UiNavigation::ParentOf(M_VOLT) == M_MAIN);
     assert(UiNavigation::ParentOf(M_SETTING) == M_MAIN);
+    assert(UiNavigation::ParentOf(M_ANIM_CURVE) == M_SETTING);
     assert(UiNavigation::ParentOf(M_ABOUT) == M_SETTING);
     assert(UiNavigation::ParentOf(M_LIGHT_BRI) == M_LIGHT_MAIN);
     assert(UiNavigation::ParentOf(M_LIGHT_COLOR) == M_LIGHT_MAIN);

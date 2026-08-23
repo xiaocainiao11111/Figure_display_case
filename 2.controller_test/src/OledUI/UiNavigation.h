@@ -32,6 +32,7 @@ inline UI_PAGE ParentOf(UI_PAGE page)
     case M_KRF:
     case M_KPF:
         return M_KNOB;
+    case M_ANIM_CURVE:
     case M_ABOUT:
         return M_SETTING;
     case M_LIGHT_BRI:

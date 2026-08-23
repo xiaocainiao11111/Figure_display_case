@@ -11,6 +11,48 @@ enum class AnimationCurve : uint8_t
     OutBack,
 };
 
+inline AnimationCurve AnimationCurveFromSelectionPosition(uint8_t position)
+{
+    switch (position)
+    {
+    case 1: return AnimationCurve::Linear;
+    case 2: return AnimationCurve::OutCubic;
+    case 3: return AnimationCurve::InOutCubic;
+    case 4: return AnimationCurve::OutBack;
+    default: return AnimationCurve::OutCubic;
+    }
+}
+
+inline uint8_t AnimationCurveSelectionPosition(AnimationCurve curve)
+{
+    switch (curve)
+    {
+    case AnimationCurve::Linear: return 1;
+    case AnimationCurve::OutCubic: return 2;
+    case AnimationCurve::InOutCubic: return 3;
+    case AnimationCurve::OutBack: return 4;
+    }
+
+    return 2;
+}
+
+inline AnimationCurve AnimationCurveFromValue(uint8_t value)
+{
+    switch (value)
+    {
+    case static_cast<uint8_t>(AnimationCurve::Linear):
+        return AnimationCurve::Linear;
+    case static_cast<uint8_t>(AnimationCurve::OutCubic):
+        return AnimationCurve::OutCubic;
+    case static_cast<uint8_t>(AnimationCurve::InOutCubic):
+        return AnimationCurve::InOutCubic;
+    case static_cast<uint8_t>(AnimationCurve::OutBack):
+        return AnimationCurve::OutBack;
+    default:
+        return AnimationCurve::OutCubic;
+    }
+}
+
 struct AnimationTrack
 {
     float start;
