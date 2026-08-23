@@ -1,9 +1,13 @@
 #include <cassert>
+#include <type_traits>
 
 #include "OledUI/MenuItem.h"
 
 int main()
 {
+    static_assert(!std::is_constructible<M_SELECT, const char *>::value,
+                  "menu items must declare an explicit type");
+
     const M_SELECT value_without_prefix("Brightness", MenuItemType::Value, 7);
     const M_SELECT action_with_value_prefix("~ Not a value", MenuItemType::Action);
 

@@ -33,11 +33,6 @@ struct M_SELECT
     MenuItemType type;
     uint8_t data_index;
 
-    constexpr M_SELECT(const char *label)
-        : m_select(label), type(MenuItemType::Action), data_index(0)
-    {
-    }
-
     constexpr M_SELECT(const char *label, MenuItemType item_type, uint8_t index = 0)
         : m_select(label), type(item_type), data_index(index)
     {

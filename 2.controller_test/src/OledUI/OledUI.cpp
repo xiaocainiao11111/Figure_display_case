@@ -499,14 +499,14 @@ void OledUI::Tile_Show(const M_SELECT arr[], const uint8_t icon_pic[][120])
 
 // ---- List tail rendering helpers ----
 
-static void List_Draw_Value(int n)
+static void List_Draw_Value(uint8_t data_index)
 {
     if (check_box.v == nullptr)
     {
         u8g2.print("--");
         return;
     }
-    u8g2.print(check_box.v[n - 1]);
+    u8g2.print(check_box.v[data_index]);
 }
 
 static void List_Draw_CheckBox_Frame()
@@ -523,9 +523,9 @@ static void List_Draw_CheckBox_Dot()
         CHECK_BOX_F_H - (CHECK_BOX_D_S + 1) * 2);
 }
 
-static void List_Draw_Krf(int n)
+static void List_Draw_Krf(uint8_t data_index)
 {
-    switch (check_box.v[n - 1])
+    switch (check_box.v[data_index])
     {
     case 0: u8g2.print("OFF"); break;
     case 1: u8g2.print("VOL"); break;
@@ -533,41 +533,45 @@ static void List_Draw_Krf(int n)
     }
 }
 
-static void List_Draw_Kpf(int n)
+static void List_Draw_Kpf(uint8_t data_index)
 {
-    if (check_box.v[n - 1] == 0)
+    if (check_box.v[data_index] == 0)
         u8g2.print("OFF");
-    else if (check_box.v[n - 1] <= 90)
-        u8g2.print((char)check_box.v[n - 1]);
+    else if (check_box.v[data_index] <= 90)
+        u8g2.print((char)check_box.v[data_index]);
     else
         u8g2.print("?");
 }
 
 static void List_Draw_Text_And_CheckBox(const M_SELECT arr[], int i)
 {
-    u8g2.drawStr(LIST_TEXT_S, list.temp + LIST_TEXT_H + LIST_TEXT_S, arr[i].m_select);
+    const M_SELECT &item = arr[i];
+
+    u8g2.drawStr(LIST_TEXT_S, list.temp + LIST_TEXT_H + LIST_TEXT_S, item.m_select);
     u8g2.setCursor(CHECK_BOX_L_S, list.temp + LIST_TEXT_H + LIST_TEXT_S);
 
-    switch (arr[i].m_select[0])
+    switch (RenderModeFor(item))
     {
-    case '~':
-        List_Draw_Value(i);
+    case MenuItemRenderMode::Value:
+        List_Draw_Value(item.data_index);
         break;
-    case '+':
+    case MenuItemRenderMode::Toggle:
         List_Draw_CheckBox_Frame();
-        if (check_box.m != nullptr && check_box.m[i - 1] == 1)
+        if (check_box.m != nullptr && check_box.m[item.data_index] == 1)
             List_Draw_CheckBox_Dot();
         break;
-    case '=':
+    case MenuItemRenderMode::Choice:
         List_Draw_CheckBox_Frame();
-        if (check_box.s_p != nullptr && *check_box.s_p == i)
+        if (check_box.s_p != nullptr && *check_box.s_p == item.data_index)
             List_Draw_CheckBox_Dot();
         break;
-    case '#':
-        List_Draw_Krf(i);
+    case MenuItemRenderMode::RotateBinding:
+        List_Draw_Krf(item.data_index);
         break;
-    case '$':
-        List_Draw_Kpf(i);
+    case MenuItemRenderMode::PressBinding:
+        List_Draw_Kpf(item.data_index);
+        break;
+    case MenuItemRenderMode::None:
         break;
     }
 }
